@@ -19,7 +19,7 @@ const SYNTHETIC_DELIVERIES = [
     postcode: '1010',
     region: 'AUK',
     country: 'NZ',
-    email: 'aroha.ngata@example.com',
+    email: 'terulin.sinulingga@gallagher.com', // #6: dev/test sends go to Teru; real = ADR6 via 1.2
     incoterms: 'DAP',
     hus: [{ exidv: 'HU00000101', weightKg: 2.4, lengthCm: 30, widthCm: 20, heightCm: 15 }],
   },
@@ -33,7 +33,7 @@ const SYNTHETIC_DELIVERIES = [
     postcode: '6011',
     region: 'WGN',
     country: 'NZ',
-    email: 'ben.cooper@example.com',
+    email: 'terulin.sinulingga@gallagher.com',
     incoterms: 'DAP',
     hus: [
       { exidv: 'HU00000102', weightKg: 8.1, lengthCm: 60, widthCm: 40, heightCm: 30 },
@@ -50,7 +50,7 @@ const SYNTHETIC_DELIVERIES = [
     postcode: '3000',
     region: 'VIC',
     country: 'AU',
-    email: 'grace.chen@example.com',
+    email: 'terulin.sinulingga@gallagher.com',
     incoterms: 'DAP',
     hus: [{ exidv: 'HU00000201', weightKg: 4.0, lengthCm: 40, widthCm: 30, heightCm: 20 }],
   },

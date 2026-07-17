@@ -130,6 +130,7 @@ interface CourierProvider {
   void(req: VoidRequest): Promise<void>;
   verifyWebhook(headers, rawBody): boolean;      // HMAC per carrier
   normalizeEvent(payload): TrackingEvent;        // carrier vocab → our enum
+  trackingUrl?(tracking: string): string;        // customer tracking link (§8 email); optional — email falls back to the plain number
 }
 ```
 

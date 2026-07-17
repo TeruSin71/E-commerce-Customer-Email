@@ -6,6 +6,7 @@
 // not a queue system — the durability lives in the DB, not in memory.
 const cds = require('@sap/cds')
 const { providerFor } = require('../providers')
+const email = require('./email')
 const LOG = cds.log('webhook')
 
 const RATE_MAX = 120 // requests per source per window
@@ -112,6 +113,8 @@ async function insertEvent(carrierId, e) {
 // async worker: match tracking → shipment, advance status for MAPPED events only.
 // Unknown status = store + alert + NO state change (S6). Email trigger is task 1.13 (gated).
 const ADVANCES = new Set(['pre_transit', 'in_transit', 'out_for_delivery', 'delivered', 'exception', 'returned'])
+// pickup-class = the parcel is physically with the carrier → customer email is owed (doc 08 §8)
+const PICKUP_CLASS = new Set(['in_transit', 'out_for_delivery', 'delivered'])
 async function processEvent(row) {
   const { SELECT, UPDATE } = cds.ql
   const { ShipmentEvents, Shipments } = cds.entities('courier')
@@ -121,13 +124,29 @@ async function processEvent(row) {
     return
   }
   const ships = await cds.run(SELECT.from(Shipments).where({ tracking_number: row.tracking_number }))
-  if (ships.length && ADVANCES.has(row.event_type)) {
-    const patch = { status: row.event_type }
-    if (row.event_type === 'in_transit') patch.first_scan_at = row.event_ts // first pickup scan
-    await cds.run(UPDATE(Shipments).set(patch).where({ tracking_number: row.tracking_number, status: { '!=': 'voided' } }))
-    // 1.13: on first in_transit/pickup, trigger the single customer email here (gated on Open Item #6)
+  const advance = ships.length && ADVANCES.has(row.event_type)
+  if (advance) {
+    await cds.run(UPDATE(Shipments).set({ status: row.event_type }).where({ tracking_number: row.tracking_number, status: { '!=': 'voided' } }))
+    // first_scan_at = FIRST pickup-class event (doc 08 §8) — some carrier vocabularies skip
+    // straight to out_for_delivery/delivered, so this is wider than just in_transit.
+    if (PICKUP_CLASS.has(row.event_type)) {
+      await cds.run(
+        UPDATE(Shipments).set({ first_scan_at: row.event_ts }).where({ tracking_number: row.tracking_number, first_scan_at: null })
+      )
+    }
   }
+  // event durably handled BEFORE the email leg — a slow/hung Graph call must never gate
+  // event processing (email state lives in Notifications; the nightly sweep is its backstop)
   await cds.run(UPDATE(ShipmentEvents).set({ processed: true }).where({ ID: row.ID }))
+  // 1.13: ONE customer email per DO, on the first pickup-class event — the atomic claim
+  // inside makes this idempotent, so firing on every such event is safe.
+  if (advance && PICKUP_CLASS.has(row.event_type)) {
+    try {
+      await email.notifyFirstPickup(ships[0].vbeln)
+    } catch (e) {
+      LOG.error('email notify failed', { vbeln: ships[0].vbeln, err: e.message })
+    }
+  }
 }
 
-module.exports = { handle, _reset: () => { hits.clear(); inflight = 0 } }
+module.exports = { handle, _processEvent: processEvent, _reset: () => { hits.clear(); inflight = 0 } }

@@ -12,7 +12,8 @@ async function main() {
     console.log(JSON.stringify(await jobs.purgePII()))
   } else if (which === 'poll') {
     const stalled = await jobs.findStalled()
-    console.log(JSON.stringify({ stalled: stalled.length }))
+    const unnotified = await jobs.findUnnotified() // 1.13 backstop: re-drive missed pickup emails
+    console.log(JSON.stringify({ stalled: stalled.length, ...unnotified }))
   } else {
     console.error('usage: node srv/jobs-run.js purge|poll')
     process.exit(2)

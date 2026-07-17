@@ -3,7 +3,11 @@
 // deploy-time: the CF Job Scheduler (or `cf run-task`) invokes srv/jobs-run.js nightly.
 // ponytail: no cron dep, no setInterval (a restart would reset the timer) — CF schedules it.
 const cds = require('@sap/cds')
+const email = require('./email')
 const LOG = cds.log('jobs')
+
+// Statuses that mean the parcel HAS been picked up — so the customer email is owed.
+const PICKED_UP = ['in_transit', 'out_for_delivery', 'delivered', 'exception', 'returned']
 
 const DAY_MS = 24 * 60 * 60 * 1000
 // Open Item #11 confirms the number; 24 months is the design proposal. Job runs regardless.
@@ -46,4 +50,41 @@ async function findStalled({ now = new Date() } = {}) {
   return rows
 }
 
-module.exports = { purgePII, findStalled, RETENTION_DAYS }
+// Unnotified sweep (task 1.13 backstop): a picked-up delivery that never got its email —
+// because GRAPH was unbound at scan time, or the process died between claim and send.
+// This is the retry path the per-event trigger can't provide (once first_scan_at is set,
+// no new in_transit event re-fires notify). Runs nightly beside the poller.
+//   - no Notifications row, or sent=false  → not yet sent → (re)drive notifyFirstPickup
+//   - sent=true, sent_at=null              → claim taken but send never confirmed (crash
+//                                            window): FLAG only, never auto-resend (at-most-once)
+async function findUnnotified({ send = email.notifyFirstPickup } = {}) {
+  const { SELECT } = cds.ql
+  const { Shipments, Notifications } = cds.entities('courier')
+  const shipped = await cds.run(
+    SELECT.from(Shipments).columns('vbeln').where({ status: { in: PICKED_UP } })
+  )
+  const vbelns = [...new Set(shipped.map((r) => r.vbeln))]
+  if (!vbelns.length) return { retried: 0, unconfirmed: 0 }
+
+  const notes = await cds.run(SELECT.from(Notifications).columns('vbeln', 'sent', 'sent_at').where({ vbeln: { in: vbelns } }))
+  const byVbeln = new Map(notes.map((n) => [n.vbeln, n]))
+
+  let retried = 0
+  const unconfirmed = []
+  for (const vbeln of vbelns) {
+    const n = byVbeln.get(vbeln)
+    if (n && n.sent && !n.sent_at) {
+      unconfirmed.push(vbeln) // claimed-but-unconfirmed: at-most-once, do NOT resend
+      continue
+    }
+    if (!n || !n.sent) {
+      const r = await send(vbeln) // idempotent: the atomic claim guards a concurrent event
+      if (r?.sent) retried += 1
+    }
+  }
+  if (unconfirmed.length) LOG.warn('notifications claimed but never confirmed sent', { count: unconfirmed.length })
+  if (retried) LOG.info('unnotified sweep re-sent pickup emails', { retried })
+  return { retried, unconfirmed: unconfirmed.length }
+}
+
+module.exports = { purgePII, findStalled, findUnnotified, RETENTION_DAYS }

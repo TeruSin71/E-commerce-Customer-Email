@@ -76,6 +76,57 @@
 
 ---
 
+## 1.13 — DONE (Graph send pending binding): email on first pickup, exactly-once + sweep
+_2026-07-17, session 2_
+
+Iterations: 2 (initial build green first run; review round then found the real
+bug — see below — plus a sort-comparator defect; both fixed + re-verified)
+Tools used: superpower (plan), ponytail (no mail lib — Graph = 2 fetches; no
+revert-on-failure; single sender now, per-plant = Phase 3), code-review skill
+(medium: 8 finder angles + convergence verify), cds-mcp not needed this task.
+What changed: `srv/lib/email.js` (S11 escapeHtml; graphConfig from binding ONLY;
+graphTransport token+sendMail with 10s AbortSignal timeouts; notifyFirstPickup:
+DO-level atomic claim INSERT-verify + UPDATE..WHERE sent=false, claimed !== 1
+fails closed; content = SO no. + all trackings primary-first, NEVER the DO no.;
+sent_at = send-confirmed marker; failure → bounced/bounce_info, claim kept —
+at-most-once), `srv/lib/webhook.js` (PICKUP_CLASS = {in_transit,
+out_for_delivery, delivered}; first_scan_at on FIRST pickup-class event via
+WHERE first_scan_at null; processed=true BEFORE the email leg — Graph latency
+never gates event durability or leaks an inflight slot), `srv/lib/jobs.js`
+(`findUnnotified`: nightly sweep — picked-up DOs with no sent claim →
+re-drive notifyFirstPickup; sent=true+sent_at=null (crash window) → FLAG only,
+never auto-resend), `srv/jobs-run.js` (poll runs the sweep),
+`srv/providers/mock.js` (+trackingUrl), doc 08 §5 (optional trackingUrl),
+`srv/lib/ecc.js` (fixture ship-to emails → terulin.sinulingga@gallagher.com
+per Open Item #6 answer), `test/email.test.js` (8 tests).
+**Review round (8 angles): the headline catch — my "retries when GRAPH is
+bound" comment was a LIE in v1: no retry path existed** (findStalled can't see
+scanned shipments; no later in_transit event re-fires). Fixed at the right
+altitude = the findUnnotified poller leg, test-proven (unbound scan → bind →
+sweep sends exactly once; idempotent second sweep). Also fixed from review:
+fetch timeouts (hung Graph call permanently leaked a MAX_INFLIGHT slot — 50
+leaks would kill the webhook worker), pickup-class trigger widening (carrier
+vocab skipping in_transit would never email), `(x === true)` sort comparator
+broken under SQLite 1/0 booleans (test passed by insertion-order luck — seed
+order reversed to make it honest), blanket INSERT catch now verifies the row
+exists, claim rowcount check is strict (!== 1).
+Verification: **59 tests = 59 pass** (8 email: 3-concurrent race → ONE send;
+content SO-not-DO + escaped hostile tracking + primary-first; unconfigured →
+no claim; send-failure → claim kept + bounce recorded; webhook path in_transit
+AND delivered-only vocab both → one email; sweep re-send + crash-window flag).
+Lint + build green.
+Accepted/deferred (rationale): OAuth token cache (YAGNI at ~100s sends/week);
+rebook-after-void to a NEW email stays blocked by the DO claim (doc 08 §8
+exactly-once per DO — by design); shared test fixture/db-boot helpers (3
+suites, do when next touching them); processed=false reprocessor for dropped
+worker slots (pre-existing 1.14 note — carrier retries + dedupe cover it).
+**GATE REMAINING: real Graph send needs the GRAPH destination binding (0.5
+remainder, human) — then re-verify one real email to Teru's inbox (M4 gate).
+Teru offered a Resend account for interim real-send testing — declined for now
+(doc 08 §8 fixes Graph as transport); revisit only if Teru asks.**
+
+---
+
 ## 0.3 — DONE: Open Items #2, #4, #6 CLOSED (Teru's answers) + carrier placeholders
 _2026-07-17, session 2_
 
