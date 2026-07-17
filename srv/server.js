@@ -2,9 +2,13 @@
 const cds = require('@sap/cds')
 const auth = require('./middleware/auth')
 const errors = require('./middleware/errors')
+const routes = require('./routes')
 
-// Auth first: every route added later (1.5+) sits behind validate → scope → plants.
-cds.on('bootstrap', (app) => app.use(auth.middleware()))
+// Auth first: every route sits behind validate → scope → plants.
+cds.on('bootstrap', (app) => {
+  app.use(auth.middleware())
+  routes(app)
+})
 
 // Error handler last (after all routes exist) so express routes errors into it.
 cds.on('served', () => cds.app.use(errors()))
