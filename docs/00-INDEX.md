@@ -7,6 +7,7 @@
 | Doc | Purpose | Read when |
 |---|---|---|
 | `01-Courier-Process-and-Architecture.md` | Visual overview: the ten-step Order→Ship→Invoice flow + system architecture (ECC creates, BTP ships) | First, for the big picture |
+| `02-Project-Plan.md` | Living status tracker: what's done, what's blocked, what to do next (layers status on doc 11) | To pick up work / check status |
 | `07-Courier-PRD.md` | What we're building, business facts, constraints, rejected approaches | Always, first |
 | `08-Courier-TRD.md` | Stack, landscape, API surface, ECC/carrier/email/print/webhook contracts | Before any implementation task |
 | `09-Courier-Data-Model.md` | Full HANA schema (CDS entities), access-layer rule, PII/retention | Before touching the database or any query |
