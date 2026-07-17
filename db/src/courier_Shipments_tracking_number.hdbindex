@@ -1,0 +1,1 @@
+INDEX courier_Shipments_tracking_number ON courier_Shipments (tracking_number)
