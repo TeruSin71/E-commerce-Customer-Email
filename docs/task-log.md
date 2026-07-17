@@ -29,14 +29,25 @@
   ZI_PlantAddress → real OData at 1.2) and `srv/providers/mock.js` + registry
   (→ real `providers/nzpost` at 1.6b). Every synthetic-verified task carries a
   re-verify tag; real-token/real-ECC re-verify is the M2/M3 gate.
-- **1.12 webhook DONE** (S5/S6 green on mock; real NZ Post scheme at 1.6b).
-  **All buildable security criteria now green: S1,S2,S3,S4,S5,S6,S7,S8,S9.**
-- **1.13 email — SURFACED 🔴** gated on **Open Item #6** (does e-commerce
-  already send tracking emails?) + Graph secret. Trigger hook already marked
-  in webhook.js. Do NOT build past the gate.
-- **1.14 poller + purge (S10) — BUILDABLE next** (no external gate; involves a
-  PII-delete job — wants explicit go-ahead). Then 1.15–1.17 Fiori (1.15 gated
-  on BrowserPrint spike 0.1), 1.18 go-live gate.
+- **Phase 1 BACKEND COMPLETE on synthetic data. S1–S10 ALL GREEN** (44 tests,
+  all gating merges). Done this session: 1.1, 0.5(agent), 1.3, 1.4, 1.5, 1.6a,
+  1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 1.14. Routes: /deliveries /rates /book
+  /label/:id /reprint /shipments /dashboard /void /webhook/:carrier + the
+  nightly jobs (srv/jobs-run.js).
+- **What's LEFT in Phase 1 — all human-gated:**
+  - **1.13 email — 🔴** Open Item #6 (does e-commerce already email?) + Graph
+    secret. Trigger hook marked in webhook.js. Do NOT build past the gate.
+  - **1.6b real NZ Post** — Open Item #2 (XK03) + NZ Post sandbox (0.4). Swap
+    srv/providers/mock.js → providers/nzpost; move webhook secret env → dest.
+  - **1.2 real ECC** — Open Item #4 (OX10). Wire real OData in srv/lib/ecc.js,
+    DELETE the synthetic fixtures, re-verify 1.5/1.7 on real data.
+  - **1.15–1.17 Fiori** — 1.16 (Shipment Lookup + Dashboard) is buildable now
+    against live /shipments+/dashboard; 1.15 (dispatch+print) gated on the 0.1
+    BrowserPrint spike; 1.17 Work Zone wiring.
+  - **1.18 go-live gate** — S11–S14 evidence, paid HANA plan, DR tested.
+- **Also open (human):** ruleset promote lint/CodeQL to REQUIRED checks (bot
+  denied — repo admin); FedEx paperwork (0.2). CF token expired mid-session —
+  `cf login` needed before more BTP work; hana-free auto-stops when idle.
 - **Still open (human):** Open Items #2 (XK03 contract → 1.6b), #4 (OX10 plant
   dock → 1.2), #6 (e-comm email → 1.13); ruleset promote lint/CodeQL to required
   checks (bot denied); NZ Post sandbox (0.4); FedEx (0.2); BrowserPrint (0.1).
