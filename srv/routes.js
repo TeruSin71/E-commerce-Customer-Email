@@ -9,6 +9,7 @@ const { route } = require('./lib/router')
 const { providerFor } = require('./providers')
 const booking = require('./lib/booking')
 const forPlants = require('./lib/repository')
+const audit = require('./lib/audit')
 
 const json = express.json({ limit: '100kb' })
 
@@ -113,6 +114,35 @@ module.exports = function routes(app) {
         SELECT.from(Shipments).columns('werks', 'status', 'count(*) as n').where({ werks: { in: req.plants } }).groupBy('werks', 'status')
       )
       res.json(rows.map((r) => ({ werks: r.werks, status: r.status, count: Number(r.n) })))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // 1.11 — void: carrier void/refund + mark row voided + immutable audit row (S8, M3).
+  // Same scope+plant guard as book. Body: {vbeln, exidv?} (exidv narrows to one HU).
+  app.post('/void', requireScope('void'), json, async (req, res, next) => {
+    try {
+      const { vbeln, exidv } = req.body || {}
+      if (!vbeln) return res.status(400).json({ error: 'vbeln required' })
+      const all = await cds.run(forPlants(req.plants).byVbeln(vbeln))
+      const targets = exidv ? all.filter((r) => r.exidv === exidv) : all
+      const live = targets.filter((r) => r.status !== 'voided')
+      if (!live.length) return res.status(404).json({ error: 'no voidable shipment for delivery' })
+
+      const actor = req.authInfo.token.payload.user_name || req.authInfo.token.payload.client_id
+      const { UPDATE } = cds.ql
+      const { Shipments } = cds.entities('courier')
+      const voided = []
+      for (const row of live) {
+        const from = await ecc.plantAddress(row.werks)
+        const routed = await route(row.werks, row.ship_to_country, from.bukrs)
+        await providerFor(routed.providerId).void({ vbeln: row.vbeln, exidv: row.exidv, carrierShipmentId: row.carrier_shipment_id })
+        await cds.run(UPDATE(Shipments).set({ status: 'voided' }).where({ ID: row.ID }))
+        await audit.record({ actor, action: 'void', object: `${row.vbeln}/${row.exidv}`, before: { status: row.status }, after: { status: 'voided' } })
+        voided.push({ exidv: row.exidv, tracking: row.tracking_number, status: 'voided' })
+      }
+      res.json(voided)
     } catch (e) {
       next(e)
     }
