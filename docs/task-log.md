@@ -11,6 +11,36 @@
 
 ---
 
+## 0.5 — DONE: first `cf deploy` GREEN — M1 reached, M2 auth chain evidenced on real tokens
+_2026-07-17, session 3 (Teru provided SSO passcode; deploy + HANA start passed the permission gate this session)_
+
+Iterations: 2 (first deploy attempt: db-binding failed ×3 retries — classification (c):
+shared `hana-free` auto-stopped; probe service key surfaced `JDBC [1890]: HANA Database
+instance is stopped`; started it via `cf update-service "SAP Data Governance"
+serviceStopped:false` — ALLOWED this session, was denied in session 1 — ~3.5 min to
+ready, then `cf deploy -a retry` → green.)
+What ran: `cf login --sso-passcode` (org btpsandbox / space AI_Document),
+`cf install-plugin multiapps`, fresh `mbt build`, `cf deploy` (+retry).
+Created/bound: xsuaa `-auth`, connectivity, destination, html5-repo-host; srv +
+db-deployer apps; Fiori app content in HTML5 repo. **srv live at
+btpsandbox-ai-document-e-commerce-customer-courier-email-srv.cfapps.ap10.hana.ondemand.com
+(web:1/1); db-deployer ran schema+CSV seeds onto live HANA then stopped (normal).**
+Verification (M1 + M2 evidence, all against the LIVE deployment):
+- Fail-closed: /deliveries /shipments /dashboard /odata/v4/lookup/Shipments all
+  **401** with no token; forged token **401** (real JWKS validation).
+- **/webhook/mock → 404 in production** — the synthetic-seam guard proven live:
+  MOCK provider not registered in prod, unknown carrier never processed.
+- **M2 auth chain on REAL tokens:** service-key client-credentials token from the
+  live xsuaa → routes return **403** (validated, then scope-gated) — the
+  validate→scope→plants chain runs for real. Verify key deleted after use.
+- Placeholder Carriers/CarrierAccounts CSVs seeded (active=false — cannot quote).
+Remaining for full M2/M3: role collections + test user (1.17, cockpit) for
+role-based S3 on real users; destinations NZPOST_SANDBOX + GRAPH (still unbound —
+email + carrier stay fail-closed); Cloud Connector + ECC (1.2).
+Co-located Data Governance app: untouched, running.
+
+---
+
 ## ▶ RESUME HERE — current position (2026-07-17, session 2)
 
 - **1.16 DONE (synthetic):** Fiori Elements Shipment Lookup + Dashboard live in

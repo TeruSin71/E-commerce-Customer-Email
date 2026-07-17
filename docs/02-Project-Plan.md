@@ -54,7 +54,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 0.2 | **FedEx onboarding** (OAuth app + label certification) | 👤 | ⬜ | Long lead-time — **start now**. Blocks Phase 2 |
 | 0.3 | **Resolve Open Items #2, #3, #4** (contract source, ADR6 email filter, plant address) | 👤 | ✅ *(all three closed 2026-07-17 — #2 app config, #3 ADDRNUMBER alone, #4 SPRO config table via CDS)* | |
 | 0.4 | **NZ Post API sandbox** + one real contract-priced rate call | 👤 | ⬜ | Blocks 1.6, 1.8. Save response as fixture |
-| 0.5 | **BTP plumbing** — CF space, HANA HDI container, XSUAA + xs-security, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC | 👤/🤖 | 🟡 | CF space ✅, HANA HDI + schema deployed ✅, `mta.yaml` ✅, `xs-security.json` ✅. **NEW (2026-07-17): full MTA archive builds green locally (`npx -y mbt build` — db + srv + Fiori app zip in gen/app).** Still open (👤): `cf login` (SSO, token expired), HANA start if stopped, `cf install-plugin multiapps`, `cf deploy` of the .mtar, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector. Then 🤖 re-verifies S7/S3 on real tokens (M2) |
+| 0.5 | **BTP plumbing** — CF space, HANA HDI container, XSUAA + xs-security, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC | 👤/🤖 | 🟡 | **First `cf deploy` GREEN (2026-07-17): xsuaa/connectivity/destination/html5 created + bound, srv live (web:1/1), Fiori in HTML5 repo, schema+seeds on live HANA. M1 reached; M2 auth chain proven on real xsuaa tokens (401/401/403 legs).** Still open: destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC |
 
 ## Phase 1 — NZ domestic, NZ Post, end-to-end
 
@@ -136,8 +136,8 @@ Invoice ingestion automation (if 3b earned it); `sla_thresholds` from observed p
 | M | Milestone | Depends on | Gate |
 |---|---|---|---|
 | **M0** | Foundation ready (repo, gate, deploy descriptor) | — | ✅ **reached** |
-| **M1** | BTP plumbing bound + hello-world deployed | 0.5 | first `cf deploy` green |
-| **M2** | Security spine live (schema + courier-srv + S1–S4 red→green) | 1.1, 1.3, 1.4 | S1–S4 pass on real tokens |
+| **M1** | BTP plumbing bound + hello-world deployed | 0.5 | ✅ **reached 2026-07-17** — `cf deploy` green, srv live, fail-closed 401s verified |
+| **M2** | Security spine live (schema + courier-srv + S1–S4 red→green) | 1.1, 1.3, 1.4 | 🟡 auth chain proven on real xsuaa tokens (validate→scope 403); role-based S3 on real users needs role collections (1.17) |
 | **M3** | NZ book+print works end-to-end | 1.5–1.9 + 0.1 | test parcel printed from Work Zone < 30 s |
 | **M4** | NZ webhook + email + monitoring | 1.12–1.14 | one email on real sandbox pickup |
 | **M5** | **NZ domestic LIVE** (go-live gate) | 1.18 | S1–S10 green, S11–S14 evidenced, paid HANA plan, DR tested |
