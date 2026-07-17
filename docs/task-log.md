@@ -23,9 +23,10 @@
   `E-commerce_Customer_Courier_Email-db` → create-service →
   `cds deploy --to hana:E-commerce_Customer_Courier_Email-db` → duplicate
   (vbeln,exidv) insert must be rejected → flip 1.1 to DONE.
-- **Next agent-doable tasks:** 0.5-partial (fill `xs-security.json`
-  scopes/roles from doc 10 §1.2), 1.3 (courier-srv skeleton), 1.4 (failing
-  S1–S4 tests + re-enable lint/CodeQL once `srv/` exists).
+- **0.5 agent leg done:** `xs-security.json` carries the doc 10 §1.2 scopes,
+  `werks` attribute, and 4 role templates. **Next agent-doable tasks:** 1.3
+  (courier-srv skeleton), 1.4 (failing S1–S4 tests + re-enable lint/CodeQL
+  once `srv/` exists).
 - **Blocked (human, critical path):** Open Items #2/#3/#4 (SAP SE16/XK03/OX10
   lookups), NZ Post sandbox (0.4), FedEx onboarding (0.2), BrowserPrint spike
   (0.1). See `12-Courier-Open-Items.md` and `02-Project-Plan.md`.
@@ -34,6 +35,26 @@
   Governance app; agent permission layer blocks `cf update-service`, so this is
   a human step). `ruflo` is DROPPED for now (security review not done, doc 14
   §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 0.5 (partial) — agent leg DONE: xs-security.json scopes + role templates
+_2026-07-17, session 1_
+
+Iterations: 1
+Tools used: ponytail (active — matrix copied, nothing invented), python json.tool, cds build.
+What changed: `xs-security.json` — 8 scopes (view, rate, book, print, reprint,
+void, override, config), `werks` attribute (static per role instance, never
+IdP), 4 role templates (Dispatcher, Supervisor, Support, SysAdmin) exactly per
+doc 10 §1.2. **No SuperUser template on purpose** — it carries no app scopes
+(SoD: role assignment via cockpit only). `xsappname` here is a base value;
+mta.yaml's config overrides it at deploy (`-${org}-${space}`).
+Verification: JSON valid; `cds build` still green. NOT yet verified against a
+real XSUAA instance (service creation is the human-gated remainder of 0.5,
+same HANA-start session works for both).
+Remaining 0.5 (human/agent once BTP actions possible): create/bind xsuaa +
+other service instances, destinations (NZPOST_SANDBOX, GRAPH), Cloud
+Connector, first `cf deploy`.
 
 ---
 
