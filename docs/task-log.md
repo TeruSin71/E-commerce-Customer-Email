@@ -11,21 +11,59 @@
 
 ---
 
-## ▶ RESUME HERE — current position (2026-07-17)
+## ▶ RESUME HERE — current position (2026-07-17, session 1)
 
-- **Milestone M0 (Foundation) reached.** Repo, CI/CD gate, HANA decision, deploy
-  descriptor, and governance docs are all merged to `main`.
-- **No doc-11 task has been executed yet** — everything so far is foundation /
-  governance, not a numbered task.
-- **Next agent-doable task → `1.1`:** author `db/schema.cds` from `09-...` (the
-  CDS entities). No open items block it; it unblocks milestone M2. Then, in the
-  agent track: 0.5 (fill `xs-security.json` scopes/roles), 1.3 (courier-srv
-  skeleton), 1.4 (failing S1–S4 tests + re-enable lint/CodeQL once `srv/` exists).
+- **Task 1.1 schema is AUTHORED and compile-verified** (`db/schema.cds` + 3
+  `.hdbindex`), but its deploy-verification leg is SURFACED: the shared
+  `hana-free` instance is STOPPED and the agent's permission layer denied the
+  start command. **One human action unblocks it** — start the HANA Cloud
+  instance ("SAP Data Governance" in cockpit, or
+  `cf update-service "SAP Data Governance" -c '{"data":{"serviceStopped":false}}'`),
+  then the agent re-runs: delete failed instance
+  `E-commerce_Customer_Courier_Email-db` → create-service →
+  `cds deploy --to hana:E-commerce_Customer_Courier_Email-db` → duplicate
+  (vbeln,exidv) insert must be rejected → flip 1.1 to DONE.
+- **Next agent-doable tasks:** 0.5-partial (fill `xs-security.json`
+  scopes/roles from doc 10 §1.2), 1.3 (courier-srv skeleton), 1.4 (failing
+  S1–S4 tests + re-enable lint/CodeQL once `srv/` exists).
 - **Blocked (human, critical path):** Open Items #2/#3/#4 (SAP SE16/XK03/OX10
   lookups), NZ Post sandbox (0.4), FedEx onboarding (0.2), BrowserPrint spike
   (0.1). See `12-Courier-Open-Items.md` and `02-Project-Plan.md`.
-- **Environment gotcha:** the free `hana-free` HANA Cloud auto-stops when idle —
-  restart it before any deploy or DB test.
+- **Environment gotchas:** the free `hana-free` HANA Cloud auto-stops when idle —
+  restart it before any deploy or DB test (start = safe for the co-located Data
+  Governance app; agent permission layer blocks `cf update-service`, so this is
+  a human step). `ruflo` is DROPPED for now (security review not done, doc 14
+  §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 1.1 — SURFACED (schema landed; deploy-verification leg blocked)
+_2026-07-17, session 1_
+
+Iterations: 1
+Tools used: superpower (plan), ponytail (simplicity gate — confirmed scope:
+entities + indexes only; purge job deferred to 1.14 as designed), cds-mcp
+(`search_docs`: `@assert.unique` → DB-level DDL constraint confirmed; native
+index artifacts), cds-dk 9.9.3, cf CLI 8.7.4.
+What changed: `db/schema.cds` (all 10 entities per doc 09 §2, verbatim),
+`db/src/courier_Shipments_{tracking_number,vbeln,werks_status}.hdbindex`
+(secondary indexes per doc 09), `docs/02-Project-Plan.md` status flips, this
+entry.
+Verification: `cds build` green (CI parity) and `cds build --production`
+generates all HDI artifacts. **S4 evidence:** compiler emits
+`UNIQUE INVERTED INDEX courier_Shipments_doubleBooking ON courier_Shipments
+(vbeln, exidv)` — the double-booking guard is database-level, and
+`courier_ShipmentEvents_event` covers the S6 dedupe. Reserved-word check:
+`before`/`at` columns auto-quoted by the compiler. NOT yet exercised: live
+duplicate-insert rejection on HANA (the DONE criterion's deploy leg).
+Classification: (c) environment/permission. `cf create-service hana hdi-shared
+E-commerce_Customer_Courier_Email-db` failed — "HANA Database instance is
+stopped" (JDBC 1890); the start command (`cf update-service "SAP Data
+Governance" …serviceStopped:false`) was denied by the agent permission layer
+(state change on the shared live instance). The failed service instance is
+left in place for cleanup on retry.
+Recommendation: human starts the HANA instance, then any agent session
+finishes the verification per the RESUME block above and flips 1.1 to DONE.
 
 ---
 
