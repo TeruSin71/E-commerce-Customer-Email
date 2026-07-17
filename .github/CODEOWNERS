@@ -1,0 +1,10 @@
+# The guardrail on the guardrails.
+#
+# Changes to anything under .github/ (the CI workflows and this file itself)
+# require the repo OWNER's approval — the agent cannot auto-merge them.
+# Everything OUTSIDE .github/ is auto-merged by the agent once checks pass.
+#
+# This only takes effect when the branch ruleset has
+# "Require review from Code Owners" enabled.
+
+/.github/  @TeruSin71
