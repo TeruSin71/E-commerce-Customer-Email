@@ -1,0 +1,7 @@
+{
+  "file_suffixes": {
+    "hdbindex": {
+      "plugin_name": "com.sap.hana.di.index"
+    }
+  }
+}
