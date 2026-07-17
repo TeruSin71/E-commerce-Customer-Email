@@ -13,16 +13,11 @@
 
 ## ▶ RESUME HERE — current position (2026-07-17, session 1)
 
-- **Task 1.1 schema is AUTHORED and compile-verified** (`db/schema.cds` + 3
-  `.hdbindex`), but its deploy-verification leg is SURFACED: the shared
-  `hana-free` instance is STOPPED and the agent's permission layer denied the
-  start command. **One human action unblocks it** — start the HANA Cloud
-  instance ("SAP Data Governance" in cockpit, or
-  `cf update-service "SAP Data Governance" -c '{"data":{"serviceStopped":false}}'`),
-  then the agent re-runs: delete failed instance
-  `E-commerce_Customer_Courier_Email-db` → create-service →
-  `cds deploy --to hana:E-commerce_Customer_Courier_Email-db` → duplicate
-  (vbeln,exidv) insert must be rejected → flip 1.1 to DONE.
+- **Task 1.1 fully DONE** — schema deployed to the HDI container
+  (`E-commerce_Customer_Courier_Email-db`), duplicate (vbeln,exidv) insert
+  rejected on live HANA (COURIER_SHIPMENTS_DOUBLEBOOKING), all secondary
+  indexes verified. Remember: `hana-free` auto-stops when idle — restart
+  before any deploy/DB work.
 - **0.5 agent leg done:** `xs-security.json` carries the doc 10 §1.2 scopes,
   `werks` attribute, and 4 role templates. **1.3 done:** courier-srv skeleton
   with S7 green (offline vs real xssec). **1.4 done:** S1–S4 red todo-tests in
@@ -39,6 +34,29 @@
   Governance app; agent permission layer blocks `cf update-service`, so this is
   a human step). `ruflo` is DROPPED for now (security review not done, doc 14
   §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 1.1 (deploy leg) — DONE: schema deployed to HANA, S4 guard verified live
+_2026-07-17, session 1 (after human started the HANA instance)_
+
+Iterations: 2 (first deploy failed: hand-written `db/src/*.hdbindex` had no
+`.hdiconfig` mapping — classification (a), fixed by adding `db/src/.hdiconfig`
+with the `com.sap.hana.di.index` plugin entry)
+Tools used: cf CLI (delete failed instance, recreate `hana hdi-shared`
+`E-commerce_Customer_Courier_Email-db`), `cds deploy --to hana:...`,
+`cds bind --exec` + raw-SQL verification script.
+What changed: `db/src/.hdiconfig` (new), this entry, plan flips.
+Verification (DONE criteria met on REAL HANA):
+- **Migrations run:** `cds deploy` → "successfully finished deployment"
+  (18 files). Binding saved to gitignored `.cdsrc-private.json` — no secrets
+  in repo.
+- **Constraint verified:** raw-SQL duplicate insert of (vbeln,exidv) →
+  `unique constraint violated: Table(COURIER_SHIPMENTS),
+  Index(COURIER_SHIPMENTS_DOUBLEBOOKING)`; exactly 1 row remained; cleanup done.
+- **Indexes live:** COURIER_SHIPMENTS_DOUBLEBOOKING (unique) +
+  TRACKING_NUMBER / VBELN / WERKS_STATUS secondaries confirmed via INDEXES view.
+**1.1 is now fully DONE.**
 
 ---
 

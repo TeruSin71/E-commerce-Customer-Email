@@ -54,7 +54,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 0.2 | **FedEx onboarding** (OAuth app + label certification) | 👤 | ⬜ | Long lead-time — **start now**. Blocks Phase 2 |
 | 0.3 | **Resolve Open Items #2, #3, #4** (contract source, ADR6 email filter, plant address) | 👤 | 🔴 | SE16/XK03/OX10 lookups. Blocks 1.2, 1.6 |
 | 0.4 | **NZ Post API sandbox** + one real contract-priced rate call | 👤 | ⬜ | Blocks 1.6, 1.8. Save response as fixture |
-| 0.5 | **BTP plumbing** — CF space, HANA HDI container, XSUAA + xs-security, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC | 👤/🤖 | 🟡 | CF space ✅, HANA available ✅, `mta.yaml` ✅, `xs-security.json` scopes+roles per doc 10 §1.2 ✅. **TODO:** create/bind service instances (HDI create attempted 2026-07-17, fails while HANA stopped — human must start the instance), fill xsuaa scopes+roles, add destinations, wire Cloud Connector, first `cf deploy` |
+| 0.5 | **BTP plumbing** — CF space, HANA HDI container, XSUAA + xs-security, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC | 👤/🤖 | 🟡 | CF space ✅, HANA available ✅, `mta.yaml` ✅, `xs-security.json` scopes+roles per doc 10 §1.2 ✅. **TODO:** HDI container ✅ created + schema deployed (2026-07-17); still open: xsuaa instance, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector, first `cf deploy` |
 
 ## Phase 1 — NZ domestic, NZ Post, end-to-end
 
@@ -62,7 +62,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 
 | # | Task | Depends | Owner | Status | Gate |
 |---|---|---|---|---|---|
-| 1.1 | **HANA schema (CDS)** per doc 09 — all entities, `@assert.unique` guards, purge scaffold | 0.5 | 🤖 | 🟡 *(authored + compile green; unique-index DDL evidenced)* | deploy/constraint verify blocked: HANA stopped, agent start-permission denied — needs human start (see task-log) |
+| 1.1 | **HANA schema (CDS)** per doc 09 — all entities, `@assert.unique` guards, purge scaffold | 0.5 | 🤖 | ✅ *(deployed to HDI; duplicate (vbeln,exidv) rejected on live HANA; all indexes verified)* | — |
 | 1.2 | ECC: 3 CDS views + Gateway OData; technical user scoped (S12) | 0.3 | 👤 | 🔴 | Open Items #3, #4 |
 | 1.3 | **courier-srv skeleton** — xssec middleware (validate→scope→plants), plant-scoped repository, PII-scrubbing error middleware | 0.5 | 🤖 | ✅ *(S7 tests green offline vs real xssec; fail-closed boot verified)* | re-verify S7 on real tokens once xsuaa bound (M2) |
 | 1.4 | **Write failing tests S1–S4** (test-first) | 1.1, 1.3 | 🤖 | ✅ *(4 red todo-tests in CI; lint+CodeQL re-enabled)* | ruleset add of lint/CodeQL as REQUIRED checks needs repo admin |
