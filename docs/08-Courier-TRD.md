@@ -84,7 +84,10 @@ Joins:  LIKP
         → VEKP                      (HUs; BRGEW real weight; LAENG/BREIT/HOEHE dims)
         → VBPA  WHERE PARVW = 'WE'  (ship-to partner — NOT sold-to)
         → ADRC  ON VBPA.ADRNR       (⚠ VBPA's ADRNR, NOT KNA1's — CPD customers)
-        → ADR6  ON ADRC.ADDRNUMBER  (email; filter per Open Item #3 — likely CONSNUMBER='001')
+        → ADR6  ON ADRC.ADDRNUMBER  (email; CPD ADRNR has exactly ONE ADR6 row — Open Item #3
+                                     CLOSED: no CONSNUMBER/FLGDEFAULT filter. Keep join
+                                     deterministic anyway, e.g. lowest CONSNUMBER, so a surprise
+                                     second row can never duplicate the delivery)
 Filter: KOSTK='C' AND PKSTK='C' AND WBSTK <> 'C'
 Fields: vbeln, werks, soNumber(=LIPS-VGBEL), shipToName, street, city,
         postcode, region, country, email, hus[{exidv, weightKg, lengthCm,
