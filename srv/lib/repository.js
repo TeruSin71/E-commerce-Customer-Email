@@ -3,10 +3,17 @@
 // required up front (fail closed). plants = req.plants, set by the auth middleware from the JWT.
 const cds = require('@sap/cds')
 
-module.exports = function forPlants(plants) {
+// THE plant-list guard — the single definition of "valid plants from the JWT" (fail closed).
+// Exported so every OTHER read surface (the OData LookupService) applies the IDENTICAL rule;
+// two hand-maintained copies of this check is how cross-plant leaks are born.
+function assertPlants(plants) {
   if (!Array.isArray(plants) || plants.length === 0 || plants.some((p) => typeof p !== 'string' || !p)) {
     throw new Error('repository requires the allowed-plants list from the JWT werks attribute')
   }
+}
+
+module.exports = function forPlants(plants) {
+  assertPlants(plants)
   const { SELECT } = cds.ql
   const { Shipments } = cds.entities('courier')
   return {
@@ -20,3 +27,5 @@ module.exports = function forPlants(plants) {
     // every accessor added by later tasks injects `werks: { in: plants }` the same way
   }
 }
+
+module.exports.assertPlants = assertPlants

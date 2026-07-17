@@ -11,7 +11,20 @@
 
 ---
 
-## ▶ RESUME HERE — current position (2026-07-17, session 1)
+## ▶ RESUME HERE — current position (2026-07-17, session 2)
+
+- **1.16 DONE (synthetic):** Fiori Elements Shipment Lookup + Dashboard live in
+  `app/shipment-lookup/` over a NEW read-only OData projection
+  (`srv/lookup-service.cds|.js`, S3 re-proven: `test/lookup-odata.test.js`).
+  48/48 tests green. Teru's decision: FE over freestyle (Work Zone correctness);
+  OData reads OUR HANA — no ECC dependency. Doc 08 §3 records the surface.
+  ui5-mcp was disconnected (logged); `@ui5/linter` CLI used instead.
+- **Next agent-doable:** 1.17 needs 1.15 (gated 0.1 BrowserPrint) — so Phase 1
+  agent track is now blocked on humans: Open Items #2/#4/#6, 0.1 spike, 0.4
+  sandbox, xsuaa binding (M2 real-token re-verify). 1.18 gate prep (S11–S14
+  evidence collation) is the only remaining agent-startable slice.
+
+### Prior position (session 1)
 
 - **Task 1.1 fully DONE** — schema deployed to the HDI container
   (`E-commerce_Customer_Courier_Email-db`), duplicate (vbeln,exidv) insert
@@ -60,6 +73,74 @@
   Governance app; agent permission layer blocks `cf update-service`, so this is
   a human step). `ruflo` is DROPPED for now (security review not done, doc 14
   §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 1.16 — DONE (on synthetic data): Fiori Shipment Lookup + Dashboard, S3 re-proven on OData
+_2026-07-17, session 2_
+
+Iterations: 1 (one self-caught false alarm: a leaked `cd` into app/ made tests/
+build look broken from the wrong cwd; diagnosed before touching anything)
+Tools used: superpower (plan), ponytail (3 trims: one CDS file; no ShipmentEvents
+exposure — no werks column, join-scoped projection deferred; no CDS reprint
+action — FE custom action calls existing POST /reprint), cds-mcp (projection +
+where-injection idiom), fiori-mcp (FE_LROP scaffold + 3-step functionality
+workflow), ui-ux-pro (floorplan: List Report/Object Page + FPM custom page for
+dashboard — OVP rejected as a second app for one counts table), caveman.
+**ui5-mcp DISCONNECTED this session** (logged per doc 14 §1.2 rule 3) —
+fallback: `@ui5/linter` CLI + JSON validation. One linter finding
+(`no-outdated-manifest-version`) is a UI5-2.x-readiness rule; generator emitted
+the correct manifest version for UI5 1.136.7 — recorded, not "fixed".
+**Design decision (Teru): Fiori Elements over freestyle** — Work Zone embedding
+correctness (shell/intents/theming) generated, not hand-assembled. Needs OData
+→ new read-only CAP projection over OUR HANA Shipments (missing ECC Gateway
+is unrelated to this read path). Doc 08 §3 updated in the same commit.
+What changed: `srv/lookup-service.cds` (readonly projection — EXCLUDES
+label_bytes/ship_to_email/rate columns/created_by; UI annotations: LineItem,
+SelectionFields vbeln/tracking/so/status/werks, FieldGroups #Ship + #Lifecycle
+timestamps = the support "events" view), `srv/lookup-service.js` (before-READ:
+`view` scope + `werks in <token plants>` injected into every READ incl. $count;
+fail closed on empty plants — OData twin of the repository rule),
+`test/lookup-odata.test.js` (S3 OData leg), `app/shipment-lookup/` (FE_LROP via
+fiori-mcp + hand-authored: ext/Reprint.js header action → POST /reprint,
+ext/dashboard/* FPM custom page over GET /dashboard, manifest route/target +
+CourierShipment-lookup/-monitor inbounds for 1.17 tiles, i18n),
+`package.json` (generator: workspaces + sapux + cds-plugin-ui5 devDep; test
+script scoped to `test/*.test.js` — auto-discovery was pulling the app's
+browser-only OPA journeys into node --test), docs 08/02 + this entry.
+Verification: **48 tests = 48 pass** (43 baseline + 5 new; old "44" counted the
+helpers file as a pass — count now honest). S3 OData leg GREEN: cross-plant
+$filter by vbeln/tracking/so → empty, by-key → 404, $count plant-filtered,
+positive controls per plant; $metadata leaks none of label_bytes/ship_to_email/
+rate_*/created_by; no token → 401 (express xssec middleware covers CAP-mounted
+routes — verified live: app index, OData, REST all 401 fail-closed), no view
+scope → 403. Lint clean, `cds build` green, `cds serve` boots with
+LookupService at /odata/v4/lookup + UI5 app mounted at /shipmentlookup.
+Known-cosmetic: CAP deprecation warning reading `req.authInfo` via its http
+wrapper (our property, their getter shim) — harmless, revisit if CAP removes it.
+**SYNTHETIC TAG: FE click-through in Work Zone + real-token S3 re-verify land
+with 1.17/M2 (xsuaa binding). Reprint button prints nothing yet by design —
+BrowserPrint pipeline is 1.15, gated on the 0.1 spike.**
+
+Review round (10-angle code-review + sweep, security-review skill errored on
+`origin/HEAD` — logged, inline S-pass done instead). FIXED before landing:
+plant-guard now SHARED (`repository.assertPlants` exported, OData handler uses
+it — element-type check no longer weaker than REST); before-READ registered on
+'Shipments' not '*' (werks-less future entities won't be mis-scoped); Reprint.js
+rewritten to the documented FE V4 handler contract ((oBindingContext, …), no
+`this.getModel`, ResourceBundle, CSRF preflight against the OData service root);
+Dashboard controller extends sap.fe.core.PageController; HeaderInfo $Type added;
+xs-app.json added (srv-api destination routes for odata/reprint/dashboard/label);
+dead OPA journey files deleted + test script back to bare `node --test`; new S3
+legs: OR-filter, $batch inner request, malformed-werks [''] → 403, write → 405.
+**51/51 tests green.** DEFERRED with rationale: destination-content/managed-
+approuter wiring in mta = deploy leg (M1/1.17 — gen/app build step + srv-api
+destination must be wired before first `cf deploy` of the UI); monitor tile must
+set app hash `&/dashboard` when 1.17 wires it; CDS label i18n (English-only
+regions); tokenFor test-helper consolidation (5 copies — do when next touching
+those suites); publicShipment/projection dual safe-list (both test-guarded);
+routes.js /dashboard inline aggregate → repository accessor (follow-up);
+CI workspaces install cost (`--workspaces=false` candidate at next CI touch).
 
 ---
 

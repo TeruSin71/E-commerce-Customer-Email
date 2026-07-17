@@ -71,6 +71,7 @@ All routes enforce scope + plant (see 10-Security). Plant is read from the token
 | `/dashboard` | GET | view | Counts by state per plant, stuck items. Plant-filtered. |
 | `/config/carriers` | GET/PUT | config | Non-secret carrier config only (service codes, cutoffs, label format, account ref, active). URLs and keys are NOT here — destination service only. Changes audited. |
 | `/webhook/:carrier` | POST | — (public) | See §7. HMAC-verified, timestamp-checked, size-capped, rate-limited, 200-fast, async processing. |
+| `/odata/v4/lookup` | GET (OData V4, read-only) | view | **Added at task 1.16** (decision 2026-07-17: Fiori Elements needs OData; the missing ECC Gateway is unrelated — this reads OUR HANA Shipments). CAP projection `LookupService.Shipments` for the Fiori Shipment Lookup: excludes `label_bytes`/`ship_to_email`/rate columns; scope + plant enforced in `srv/lookup-service.js` (same fail-closed rule as the repository); S3 re-proven on this path (`test/lookup-odata.test.js`). The money path stays on the REST routes above — the OData surface is lookup-only. |
 
 ## 4. ECC integration contract
 
