@@ -7,15 +7,16 @@
 
 ## 1. Required tooling
 
-**Execution environment: SAP Business Application Studio (BAS) with Claude Code.** All tools below are confirmed available there. BAS also provides the SAP toolchain natively (CDS compiler, CF CLI, Fiori tools) — prefer it over ad-hoc installs.
+**Execution environment: Claude Code** (VSCode workspace) with the SAP toolchain available — `cf` CLI and `@sap/cds-dk` (CDS compiler) installed, and the MCP servers below connected. (SAP Business Application Studio is an equivalent environment — the same tools apply.) Prefer the MCP servers + installed toolchain over ad-hoc installs.
 
 ### 1.1 SAP MCP servers — REQUIRED when the task touches their domain
 
 | Tool | Use for | Tasks |
 |---|---|---|
-| **CDS MCP** | Authoring/validating CDS views, CDL syntax, annotations | 1.2 (the three ECC views) |
-| **CAP MCP** | CAP-model artifacts, service definitions, if courier-srv adopts CAP conventions | 1.3+ backend |
-| **Fiori MCP** | Fiori elements/SAPUI5 scaffolding, manifest.json, Fiori guidelines compliance | 1.15, 1.16, 1.17 |
+| **cds-mcp** (CDS + CAP — one server) | CDS/CDL syntax, entities & service definitions, annotations, CAP docs (`search_docs`, `search_model`) | 1.1 (schema), 1.2 (ECC views), 1.3+ (courier-srv) |
+| **fiori-mcp** | Fiori elements / SAPUI5 app scaffolding, OData metadata, `manifest.json`, guidelines | 1.15, 1.16, 1.17 |
+| **ui5-mcp** | UI5 API reference & guidelines, `run_ui5_linter`, `run_manifest_validation` | 1.15, 1.16, 1.17 |
+| **snyk** | Security scans: `snyk_code_scan` (S-controls), `snyk_sca_scan` (deps), `snyk_iac_scan` (mta/config) | 1.4, 1.18, 3b, per-carrier |
 
 Rule: if the task is in an MCP's domain, use it rather than free-handing the artifact.
 
@@ -25,6 +26,11 @@ Rule: if the task is in an MCP's domain, use it rather than free-handing the art
 |---|---|---|
 | **superpower** (skill) | Writing/working-plan structuring and brainstorming | Loop step 1 (PLAN) of any non-trivial task; drafting/updating any doc; Phase 0 spike write-ups; whenever a task-log SURFACED entry needs a recommendation |
 | **ponytail** (skill) | Over-engineering guard | Loop step 2 (EXECUTE) review gate — run it on the planned change BEFORE writing code for tasks 1.3+; MANDATORY before any task that adds a new table, new service, new abstraction layer, or new dependency |
+| **ui-ux-pro** (skill) | SAP Fiori/UI5 UI-UX design & review — floorplans, annotations, accessibility, Fiori guidelines | Fiori tasks 1.15–1.17 (design + review) |
+| **verify** / **run** (skills) | Drive the change end-to-end / launch the app to confirm real behaviour | Loop step 3 (VERIFY) — never claim done on tests alone |
+| **code-review** + **security-review** (skills) | Correctness + security review of the diff | Loop step 3, on the PR (after ponytail's simplicity pass) |
+| **deep-research** (skill) | Multi-source fact-checked research (carrier API docs, SAP field semantics) | Phase 0 onboarding (0.2, 0.4); per-carrier (Ph2) |
+| **dataviz** (skill) | Chart/dashboard design | Dashboard tile (1.16) |
 | **ruflo** (MCP) | Agent meta-harness (formerly Claude Flow). **SCOPED FOR THIS PROJECT TO PERSISTENT MEMORY ONLY:** `memory_store` / `memory_search` / `memory_list` for cross-session knowledge (decisions made, carrier API quirks discovered, spike results) | Start of session: search memory for the current task's context. End of any task that produced a non-obvious learning: store it. **FORBIDDEN for this project:** swarm_*, agent_spawn, hive-mind_*, neural/training tools — one agent, one task, per the §2 loop. Spawning sub-agent swarms for a ~400–800 LOC service is exactly the over-engineering ponytail exists to block. |
 
 Rules:
@@ -38,8 +44,8 @@ Rules:
 |---|---|---|
 | Planning | **superpower** | Use superpower for plan structure in loop step 1. Claude Code's native plan mode may run, but the plan artifact follows superpower's structure — don't produce two competing plans. |
 | Cross-session memory | **task-log.md is the source of truth** | task-log.md is authoritative and MANDATORY (it's the human-readable handover). ruflo memory is a search index OVER the same facts — store into ruflo only what is ALSO in task-log.md, never ruflo-only. If they disagree, task-log.md wins. Claude Code auto-memory (CLAUDE.md) holds only stable conventions, not task state. |
-| CDS vs CAP MCP | **Domain** | ECC CDS views (task 1.2) — CDS MCP. courier-srv CAP artifacts — CAP MCP. Never both on one artifact. |
-| Fiori MCP vs BAS native generators | **Fiori MCP** | Agent work goes through the MCP (legible, loggable). BAS native tools are for humans. |
+| CDS / CAP artifacts | **cds-mcp** | One server covers both ECC CDS views (1.2) and courier-srv CAP artifacts (1.3+). |
+| Fiori scaffolding vs UI5 checks | **fiori-mcp** scaffolds, **ui5-mcp** validates | fiori-mcp generates the app + OData wiring; ui5-mcp runs the linter + manifest validation and provides API/guidelines. |
 | ponytail vs code-review skills | **Both, different lenses** | ponytail = simplicity gate BEFORE code (step 2). Code/security review = correctness AFTER code (step 3). Not duplicates — do not skip one because the other ran. |
 
 ### 1.3 Always
@@ -79,8 +85,10 @@ Run this loop for EVERY task in doc 11. Do not freestyle.
 │    - Run existing test suite (no regressions)           │
 │    - Lint/build passes                                  │
 │                                                         │
-│ 4. BRANCH                                               │
-│    - ALL green → write task log entry → DONE, exit loop │
+│ 4. LAND (green only)                                    │
+│    - Branch → commit → PR → auto-merge (build+test).    │
+│    - main is PROTECTED — never push to main directly.   │
+│    - Green → task-log entry → DONE, then exit loop.     │
 │    - Failure → step 5                                   │
 │                                                         │
 │ 5. DIAGNOSE (do not blind-retry)                        │
@@ -107,6 +115,7 @@ Run this loop for EVERY task in doc 11. Do not freestyle.
 3. **One task at a time.** Do not start task N+1 while N is mid-loop.
 4. **Blind retry is forbidden.** Every iteration after the first requires a written diagnosis that differs from the previous one. Same diagnosis twice = you're stuck = surface at that point, don't wait for the cap.
 5. **Surfacing is success, not failure.** A blocked task correctly surfaced with a diagnosis is a completed loop.
+6. **Land via PR — never push to `main`.** `main` is protected by a branch ruleset (direct push is rejected). A green task lands as branch → commit → PR → **auto-merge** on `build`+`test`; `.github/**` changes are owner-gated. See `CONTRIBUTING.md`.
 
 ### 2.2 Task log entry (append per completed/surfaced task)
 
