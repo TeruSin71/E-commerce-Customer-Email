@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2.4",
-    "@sap/cds-dk": "^9",
+    "@sap/cds-dk": "^10",
     "@sap/eslint-plugin-cds": "^4.2.4",
     "eslint": "^10.7.0",
     "cds-plugin-ui5": "^0.17.0"
