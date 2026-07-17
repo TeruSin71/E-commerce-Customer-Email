@@ -67,7 +67,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 1.3 | **courier-srv skeleton** — xssec middleware (validate→scope→plants), plant-scoped repository, PII-scrubbing error middleware | 0.5 | 🤖 | ✅ *(S7 tests green offline vs real xssec; fail-closed boot verified)* | re-verify S7 on real tokens once xsuaa bound (M2) |
 | 1.4 | **Write failing tests S1–S4** (test-first) | 1.1, 1.3 | 🤖 | ✅ *(4 red todo-tests in CI; lint+CodeQL re-enabled)* | ruleset add of lint/CodeQL as REQUIRED checks needs repo admin |
 | 1.5 | `/deliveries` worklist proxy, plant-filtered | 1.2, 1.3 | 🤖 | 🟡 *(DONE on synthetic ECC fixture; re-verify + fixture removal when 1.2 lands)* | real-ECC re-verify gates M3 |
-| 1.6 | Provider interface + `providers/nzpost.ts` + router table; destination-only URLs (S1); fail-closed contract cache | 0.3, 0.4 | 🤖 | 🔴 | Open Item #2 + NZ Post sandbox (0.4) |
+| 1.6 | Provider interface + `providers/nzpost.ts` + router table; destination-only URLs (S1); fail-closed contract cache | 0.3, 0.4 | 🤖 | 🟡 *(1.6a done: interface + S1 guard GREEN + router + mock carrier; 1.6b nzpost gated)* | 1.6b: Open Item #2 + NZ Post sandbox (0.4) |
 | 1.7 | `/rates` | 1.5, 1.6 | 🤖 | ⬜ | |
 | 1.8 | `/book` — idempotent (S4), store label bytes (S2), multi-HU | 1.4, 1.7 | 🤖 | ⬜ | |
 | 1.9 | `/label/:id` + `/reprint`, auth + plant-checked | 1.8 | 🤖 | ⬜ | |

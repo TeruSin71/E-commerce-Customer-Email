@@ -71,7 +71,8 @@ const tokenFor = (werks, scopes) =>
   })
 
 // ── S1 — carrier URLs only ever come from bound destinations; hostile/private refused ──
-test('S1: destination-only carrier URLs; private/link-local ranges refused', { todo: 'red until task 1.6 (provider + destination resolver)' }, () => {
+// todo marker removed in task 1.6a — this test now GATES merges.
+test('S1: destination-only carrier URLs; private/link-local ranges refused', () => {
   let destinations
   assert.doesNotThrow(() => {
     destinations = require('../srv/lib/destinations')

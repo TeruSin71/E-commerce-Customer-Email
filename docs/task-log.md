@@ -37,6 +37,28 @@
 
 ---
 
+## 1.6a — DONE: provider interface, S1 destination guard, router, mock carrier
+_2026-07-17, session 1 (split blessed by Teru: carrier-agnostic half now, nzpost half gated)_
+
+Iterations: 1
+What changed: `srv/lib/destinations.js` (assertAllowedCarrierUrl — S1:
+destination-origin match + private/link-local/loopback refusal; DNS-rebind
+pinning noted for the real provider's HTTP client), `srv/lib/router.js`
+(table-driven route(werks, destCountry, bukrs) over Routes/Carriers +
+FAIL-CLOSED contract cache over CarrierAccounts, 5-min TTL — no contract,
+no quote, ever), `srv/providers/mock.js` (deterministic synthetic carrier,
+interface per doc 08 §5; accepts NO webhooks; normalizes to 'unknown' —
+fail closed), `srv/providers/index.js` (registry; MOCK registered ONLY
+outside production), `test/router.test.js`, S1 test un-todo'd.
+Verification: 25 tests = 22 pass + 3 todo (S2/S3/S4). **S1 GREEN and now
+gates merges.** Router: no-route/inactive-carrier/no-contract all fail
+closed; output carries destination NAME only, never a URL. Lint + build green.
+**1.6b (providers/nzpost) SURFACED — still gated on Open Item #2 (contract
+source) + NZ Post sandbox (0.4).** Mock provider unlocks 1.7–1.11; every
+green on MOCK carries the synthetic re-verify tag (real NZ Post at 1.6b).
+
+---
+
 ## 1.5 — DONE (on SYNTHETIC ECC): /deliveries worklist proxy, plant-filtered
 _2026-07-17, session 1_
 
