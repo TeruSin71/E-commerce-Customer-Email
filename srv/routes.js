@@ -10,8 +10,11 @@ const { providerFor } = require('./providers')
 const booking = require('./lib/booking')
 const forPlants = require('./lib/repository')
 const audit = require('./lib/audit')
+const webhook = require('./lib/webhook')
 
 const json = express.json({ limit: '100kb' })
+// raw body for webhook HMAC (doc 08 §7.1): 256KB cap → express returns 413 automatically
+const rawWebhook = express.raw({ type: '*/*', limit: '256kb' })
 
 // one delivery, ONLY if visible to the caller's plants — unknown and other-plant look identical (404)
 async function visibleDelivery(vbeln, plants) {
@@ -22,6 +25,10 @@ async function visibleDelivery(vbeln, plants) {
 }
 
 module.exports = function routes(app) {
+  // 1.12 — public webhook (doc 08 §7). NO auth (carved out in auth middleware); its own
+  // defenses are HMAC + timestamp + rate limit + body cap. Raw body needed for the HMAC.
+  app.post('/webhook/:carrier', rawWebhook, (req, res, next) => webhook.handle(req, res).catch(next))
+
   // 1.5 — worklist proxy: packed, not-yet-shipped deliveries for the user's plants
   app.get('/deliveries', requireScope('view'), async (req, res, next) => {
     try {

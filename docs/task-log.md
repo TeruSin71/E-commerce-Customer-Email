@@ -18,14 +18,25 @@
   rejected on live HANA (COURIER_SHIPMENTS_DOUBLEBOOKING), all secondary
   indexes verified. Remember: `hana-free` auto-stops when idle — restart
   before any deploy/DB work.
-- **0.5 agent leg done:** `xs-security.json` carries the doc 10 §1.2 scopes,
-  `werks` attribute, and 4 role templates. **1.3 done:** courier-srv skeleton
-  with S7 green (offline vs real xssec). **1.4 done:** S1–S4 red todo-tests in
-  CI + lint/CodeQL re-enabled.
-- **Agent track is now BLOCKED on humans/externals:** 1.5 needs 1.2 (ECC views
-  ← Open Items #3/#4), 1.6 needs Open Item #2 + NZ Post sandbox (0.4), 1.15
-  needs the BrowserPrint spike (0.1). Plus the HANA start for 1.1's deploy
-  verify (below) and repo-admin ruleset edit for lint/CodeQL required checks.
+- **Synchronous backend COMPLETE on the synthetic seam (Teru's decision: build
+  now on synthetic data, swap to real ECC + real NZ Post when the connection
+  exists).** Done: 1.1, 0.5(agent), 1.3, 1.4, 1.5, 1.6a, 1.7, 1.8, 1.9, 1.10,
+  1.11. Routes live: /deliveries /rates /book /label/:id /reprint /shipments
+  /dashboard /void. **ALL of S1,S2,S3,S4,S7,S8,S9 GREEN and gating merges.**
+  This is M2's security spine, evidenced on synthetic data.
+- **Two synthetic seams to unwind when connections exist (both fail closed in
+  prod, can never leak):** `srv/lib/ecc.js` (synthetic ZC_CourierDelivery +
+  ZI_PlantAddress → real OData at 1.2) and `srv/providers/mock.js` + registry
+  (→ real `providers/nzpost` at 1.6b). Every synthetic-verified task carries a
+  re-verify tag; real-token/real-ECC re-verify is the M2/M3 gate.
+- **Next backend tasks:** 1.12 webhook (S5/S6) — buildable on the synthetic
+  pattern (mock HMAC + test secret); real NZ Post scheme lands with 1.6b.
+  1.13 email — 🔴 gated on **Open Item #6** (does e-commerce already send
+  tracking emails?) + Graph secret. 1.14 poller + purge (S10) — buildable now.
+- **Still open (human):** Open Items #2 (XK03 contract → 1.6b), #4 (OX10 plant
+  dock → 1.2), #6 (e-comm email → 1.13); ruleset promote lint/CodeQL to required
+  checks (bot denied); NZ Post sandbox (0.4); FedEx (0.2); BrowserPrint (0.1).
+  HANA auto-stops when idle — restart before any deploy/DB work.
 - **Blocked (human, critical path):** Open Items #2/#3/#4 (SAP SE16/XK03/OX10
   lookups), NZ Post sandbox (0.4), FedEx onboarding (0.2), BrowserPrint spike
   (0.1). See `12-Courier-Open-Items.md` and `02-Project-Plan.md`.
@@ -34,6 +45,36 @@
   Governance app; agent permission layer blocks `cf update-service`, so this is
   a human step). `ruflo` is DROPPED for now (security review not done, doc 14
   §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 1.12 — DONE (on MOCK carrier): /webhook/:carrier, S5 + S6 GREEN
+_2026-07-17, session 1_
+
+Iterations: 1 (ponytail-gated first; one self-caught circular require
+webhook↔providers→mock, fixed by extracting pure helpers to srv/lib/sig.js;
+one lint catch: dead `ok=false` initializer)
+Ponytail verdict: rate-limit / body-cap / bounded-queue are doc 08 §7
+security REQUIREMENTS at a public trust boundary (S5/M2 DoS), not simplifiable
+away — but implemented minimally: fixed-window Map counter, express.raw limit
+(413 auto), and "bounded queue" = setImmediate + in-flight counter because the
+event is durably stored in ShipmentEvents BEFORE the 200 (overflow/crash rides
+the nightly poller, task 1.14). No queue lib, no new deps (node:crypto).
+What changed: `srv/lib/webhook.js` (receiver: rate-limit → cap → HMAC+timestamp
+verify → normalize+dedupe insert → fast 200 → async status worker; unknown
+status → stored 'unknown', processed, NO state change, S6; carrier strings
+shape/length-bounded before store, S11), `srv/lib/sig.js` (pure HMAC/timestamp
+helpers, breaks the require cycle), `srv/providers/mock.js` (+ verifyWebhook
+HMAC-SHA256 constant-time + ±5min, + normalizeEvent with a STATUS_MAP →
+'unknown' fail-closed), `srv/routes.js` (POST /webhook/:carrier with
+express.raw 256KB), `test/webhook.test.js`.
+Verification: **41 tests = 41 pass, 0 todo.** S5: valid signed → 200 + status
+advanced + first_scan_at; replay (stale ts) → 401; tampered → 401; missing sig
+→ 401; >256KB → 413; flood → 429; dedupe → one row. S6: never-seen status →
+stored 'unknown', processed, shipment stays 'booked'. Lint + build green.
+**Webhook secret is an env placeholder (WEBHOOK_SECRET_<CARRIER>) → moves to
+the carrier destination at 1.6b. Email trigger is left as a marked hook in
+processEvent for 1.13 (gated, Open Item #6).**
 
 ---
 
