@@ -31,13 +31,19 @@
           "semanticObject": "CourierShipment",
           "action": "lookup",
           "title": "{{appTitle}}",
-          "signature": { "parameters": {}, "additionalParameters": "allowed" }
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
         },
         "CourierShipment-monitor": {
           "semanticObject": "CourierShipment",
           "action": "monitor",
           "title": "{{dashboardTitle}}",
-          "signature": { "parameters": {}, "additionalParameters": "allowed" }
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
         }
       }
     }
