@@ -13,7 +13,6 @@ const xsuaa = require('./helpers/xsuaa-mock')
 let cds
 let server
 let base
-let labelId1000 // seeded werks-1000 shipment (label/reprint target)
 
 before(async () => {
   xsuaa.install()
@@ -46,7 +45,6 @@ before(async () => {
     created_by: 'seed',
   })
   await cds.run(INSERT.into(Shipments).entries([row(1, '1000'), row(2, '2000')]))
-  labelId1000 = '00000000-0000-0000-0000-000000000001'
 
   // routing config so the /book money path can run against the MOCK carrier
   const { Carriers, CarrierAccounts, Routes } = cds.entities('courier')
@@ -102,17 +100,45 @@ test('S1: destination-only carrier URLs; private/link-local ranges refused', () 
 })
 
 // ── S2 — label bytes only via authenticated, plant-checked route ──
-test('S2: /label/:id — 401 without token, 403 wrong plant, bytes for right plant', { todo: 'red until tasks 1.8/1.9 (book + label routes)' }, async () => {
-  const noToken = await call(`/label/${labelId1000}`)
+// todo marker removed in task 1.9 — this test now GATES merges. It books a real DO first so
+// the label id is one the system minted, then exercises the download auth legs.
+test('S2: /label/:id — 401 without token, 403 wrong plant, stored bytes (never a URL) for right plant', async () => {
+  const VBELN = '0080000102' // fixture DO, werks 1000
+  const booked = await call('/book', {
+    method: 'POST',
+    token: tokenFor(['1000'], ['view', 'rate', 'book']),
+    body: { vbeln: VBELN, rateId: `MOCK-STD-${VBELN}` },
+  })
+  assert.ok(booked.status < 300, `book setup failed: ${booked.status}`)
+  const labelRef = (await booked.json())[0].zplRef // "/label/<uuid>"
+
+  const noToken = await call(labelRef)
   assert.equal(noToken.status, 401, 'unauthenticated label download must be 401')
 
-  const wrongPlant = await call(`/label/${labelId1000}`, { token: tokenFor(['2000'], ['view', 'reprint']) })
-  assert.equal(wrongPlant.status, 403, 'wrong-plant label download must be 403')
+  const wrongPlant = await call(labelRef, { token: tokenFor(['2000'], ['view', 'reprint']) })
+  assert.equal(wrongPlant.status, 404, 'other-plant label must be indistinguishable from missing (404, no leak)')
 
-  const rightPlant = await call(`/label/${labelId1000}`, { token: tokenFor(['1000'], ['view', 'reprint']) })
+  const rightPlant = await call(labelRef, { token: tokenFor(['1000'], ['view', 'reprint']) })
   assert.equal(rightPlant.status, 200, 'right-plant label download must serve stored bytes')
   const body = await rightPlant.text()
+  assert.ok(body.length > 0, 'label bytes must be served')
   assert.ok(!/https?:\/\//.test(body), 'label response must be stored bytes, never a carrier URL (H2)')
+})
+
+// grep-style guard for S2/H2: no carrier label URL is ever stored or returned
+test('S2: label bytes column holds ZPL, not a URL', async () => {
+  const { SELECT } = cds.ql
+  const { Shipments } = cds.entities('courier')
+  const rows = await cds.run(SELECT.columns('ID', 'label_bytes').from(Shipments).where({ vbeln: '0080000102' }))
+  assert.ok(rows.length > 0, 'expected booked shipments to inspect')
+  for (const r of rows) {
+    if (!r.label_bytes) continue
+    const chunks = []
+    for await (const chunk of r.label_bytes) chunks.push(chunk) // drain the LargeBinary stream
+    const content = Buffer.concat(chunks.map((c) => (Buffer.isBuffer(c) ? c : Buffer.from(c)))).toString()
+    assert.ok(content.length > 0, 'label bytes must be present')
+    assert.ok(!/https?:\/\//.test(content), 'label_bytes must never contain a URL')
+  }
 })
 
 // ── S3 — cross-plant reads return nothing on EVERY read path ──

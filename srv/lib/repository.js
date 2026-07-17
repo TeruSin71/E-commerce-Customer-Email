@@ -10,8 +10,13 @@ module.exports = function forPlants(plants) {
   const { SELECT } = cds.ql
   const { Shipments } = cds.entities('courier')
   return {
+    byId: (id) => SELECT.from(Shipments).where({ ID: id, werks: { in: plants } }),
+    // label_bytes is LargeBinary (media): excluded from SELECT *, so request it explicitly.
+    // CAP returns it as a Readable stream — the route pipes it (never buffers PII in memory).
+    labelById: (id) => SELECT.columns('ID', 'label_bytes', 'label_format').from(Shipments).where({ ID: id, werks: { in: plants } }),
     byVbeln: (v) => SELECT.from(Shipments).where({ vbeln: v, werks: { in: plants } }),
     byTracking: (t) => SELECT.from(Shipments).where({ tracking_number: t, werks: { in: plants } }),
+    bySo: (so) => SELECT.from(Shipments).where({ so_number: so, werks: { in: plants } }),
     // every accessor added by later tasks injects `werks: { in: plants }` the same way
   }
 }

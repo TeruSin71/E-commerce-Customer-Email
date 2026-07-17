@@ -37,6 +37,28 @@
 
 ---
 
+## 1.9 — DONE: /label/:id + /reprint, S2 GREEN
+_2026-07-17, session 1_
+
+Iterations: 2 (first run: routes.js missing `cds` require — caught by lint
+(no-undef) AND runtime; then LargeBinary read semantics)
+Diagnosis of iter-1 test failures (classification (a), fixed): `@cap-js/sqlite`
+(and HANA) treat `LargeBinary` as MEDIA — omitted from `SELECT *` (so
+`label_bytes` was undefined → 404) and returned as a Readable STREAM when
+selected explicitly. Probed directly before fixing.
+What changed: `srv/lib/repository.js` (+ byId, labelById [explicit
+label_bytes columns], bySo accessors — all plant-scoped), `srv/routes.js`
+(GET /label/:id — scope reprint, streams stored bytes, never a carrier URL;
+POST /reprint — scope reprint, plant-checked, returns zplRefs; + `cds`
+require), S2 test un-todo'd (books a real DO, exercises download auth legs +
+drains the stream to assert no URL).
+Verification: 30 tests = 29 pass + 1 todo (S3 → 1.10). **S2 GREEN and
+gating:** no token → 401, other-plant → 404 (indistinguishable from missing),
+right-plant → stored ZPL bytes, never a URL; label_bytes column drained and
+URL-checked. Lint + build green.
+
+---
+
 ## 1.8 — DONE (on MOCK carrier): POST /book — idempotent money path, S4 GREEN
 _2026-07-17, session 1_
 
