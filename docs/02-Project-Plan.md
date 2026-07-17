@@ -52,7 +52,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 |---|---|---|---|---|
 | 0.1 | **BrowserPrint-in-Work-Zone spike** — ZPL from Work Zone iframe → localhost → Zebra prints | 👤 | ⬜ | Blocks ALL UI printing (1.15). Needs a locked-down corporate PC + printer |
 | 0.2 | **FedEx onboarding** (OAuth app + label certification) | 👤 | ⬜ | Long lead-time — **start now**. Blocks Phase 2 |
-| 0.3 | **Resolve Open Items #2, #3, #4** (contract source, ADR6 email filter, plant address) | 👤 | 🔴 | SE16/XK03/OX10 lookups. Blocks 1.2, 1.6 |
+| 0.3 | **Resolve Open Items #2, #3, #4** (contract source, ADR6 email filter, plant address) | 👤 | ✅ *(all three closed 2026-07-17 — #2 app config, #3 ADDRNUMBER alone, #4 SPRO config table via CDS)* | |
 | 0.4 | **NZ Post API sandbox** + one real contract-priced rate call | 👤 | ⬜ | Blocks 1.6, 1.8. Save response as fixture |
 | 0.5 | **BTP plumbing** — CF space, HANA HDI container, XSUAA + xs-security, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC | 👤/🤖 | 🟡 | CF space ✅, HANA available ✅, `mta.yaml` ✅, `xs-security.json` scopes+roles per doc 10 §1.2 ✅. **TODO:** HDI container ✅ created + schema deployed (2026-07-17); still open: xsuaa instance, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector, first `cf deploy` |
 
@@ -63,7 +63,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | # | Task | Depends | Owner | Status | Gate |
 |---|---|---|---|---|---|
 | 1.1 | **HANA schema (CDS)** per doc 09 — all entities, `@assert.unique` guards, purge scaffold | 0.5 | 🤖 | ✅ *(deployed to HDI; duplicate (vbeln,exidv) rejected on live HANA; all indexes verified)* | — |
-| 1.2 | ECC: 3 CDS views + Gateway OData; technical user scoped (S12) | 0.3 | 👤 | 🔴 | Open Items #3, #4 |
+| 1.2 | ECC: **2** CDS views + Gateway OData; technical user scoped (S12) | 0.3 | 👤 | ⬜ *(no open questions left — ZC_CourierDelivery + ZI_PlantAddress per doc 08 §4.1; ZI_CarrierContract dropped)* | ECC dev access + Cloud Connector |
 | 1.3 | **courier-srv skeleton** — xssec middleware (validate→scope→plants), plant-scoped repository, PII-scrubbing error middleware | 0.5 | 🤖 | ✅ *(S7 tests green offline vs real xssec; fail-closed boot verified)* | re-verify S7 on real tokens once xsuaa bound (M2) |
 | 1.4 | **Write failing tests S1–S4** (test-first) | 1.1, 1.3 | 🤖 | ✅ *(4 red todo-tests in CI; lint+CodeQL re-enabled)* | ruleset add of lint/CodeQL as REQUIRED checks needs repo admin |
 | 1.5 | `/deliveries` worklist proxy, plant-filtered | 1.2, 1.3 | 🤖 | 🟡 *(DONE on synthetic ECC fixture; re-verify + fixture removal when 1.2 lands)* | real-ECC re-verify gates M3 |
@@ -74,7 +74,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 1.10 | `/shipments` + `/dashboard` via plant-scoped repo only | 1.8 | 🤖 | ✅ *(S3 GREEN + gating; all S1–S4 green)* | |
 | 1.11 | `/void` + audit_log; append-only grants (S8) | 1.8 | 🤖 | ✅ *(S8 GREEN; append-only audit; DB grant = .hdbrole at go-live)* | |
 | 1.12 | `/webhook/nzpost` — HMAC, timestamp window, cap, rate-limit, dedupe, fast-200, fail-closed status map (S5, S6) | 1.8 | 🤖 | 🟡 *(DONE on mock carrier; S5+S6 GREEN + gating; secret = env placeholder → destination at 1.6b)* | real NZ Post HMAC scheme at 1.6b |
-| 1.13 | Email on first pickup — Graph, atomic DO-level claim, SO no. + tracking, escaped strings (S11) | 1.12 | 🤖 | 🔴 | Open Item #6 (avoid duplicate customer comms) |
+| 1.13 | Email on first pickup — Graph, atomic DO-level claim, SO no. + tracking, escaped strings (S11) | 1.12 | 🤖 | ⬜ *(#6 CLOSED: courier owns comms; test recipient = Teru until real ECC ADR6 at 1.2; Graph secret via destination = 0.5 remainder)* | |
 | 1.14 | Nightly fallback poller + purge job (configurable retention, S10) | 1.12 | 🤖 | ✅ *(S10 GREEN with backdated fixtures; CF Job Scheduler calls srv/jobs-run.js)* | window = Open Item #11 (default 730d; job built regardless) |
 | 1.15 | Fiori Courier Dispatch — worklist→rate→book→print (BrowserPrint), plant switcher | 0.1, 1.9 | 🤖 | 🔴 | Open Item 0.1 (spike) |
 | 1.16 | Fiori Shipment Lookup + Dashboard tiles | 1.10 | 🤖 | ✅ *(FE List Report/Object Page over new read-only OData `LookupService`; S3 re-proven on OData path; dashboard page over /dashboard; Work Zone wiring = 1.17)* | |
@@ -119,10 +119,10 @@ Invoice ingestion automation (if 3b earned it); `sla_thresholds` from observed p
 
 | # | Blocker | Owner | Blocks | Status |
 |---|---|---|---|---|
-| 2 | Carrier contract/account source in SAP | 👤 SAP | 1.6 | ❌ open |
-| 3 | ADR6 email selection for CPD addresses | 👤 SAP | 1.2 (wrong ⇒ zero emails) | ❌ open |
-| 4 | Plant dispatch address (dock vs office) | 👤 SAP/warehouse | 1.2, Phase 3 | ❌ open |
-| 6 | Does e-commerce already send tracking emails? | 👤 e-comm | 1.13 | ❌ open |
+| 2 | Carrier contract/account source in SAP | 👤 SAP | 1.6 | ✅ closed — app config, placeholders seeded (`db/data/`) |
+| 3 | ADR6 email selection for CPD addresses | 👤 SAP | 1.2 (wrong ⇒ zero emails) | ✅ closed |
+| 4 | Plant dispatch address (dock vs office) | 👤 SAP/warehouse | 1.2, Phase 3 | ✅ closed — SPRO config table via CDS view |
+| 6 | Does e-commerce already send tracking emails? | 👤 e-comm | 1.13 | ✅ closed — courier app owns the email |
 | 8 | Finance invoice/reconciliation process | 👤 Finance (Teru checking) | Phase 3b | ❌ open |
 | 11 | PII retention window (≈24 mo?) | 👤 Legal/Finance | 1.14 config (job built regardless) | ❌ open |
 | 1, 5, 7 | International: HS codes, declared value, needed at all | 👤 business/SAP | Phase 4 | ❌ open |

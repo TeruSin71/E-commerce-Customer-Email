@@ -17,7 +17,7 @@ entity CarrierAccounts {
   key carrier_id : String(20);                 // -> Carriers.carrier_id
   key bukrs      : String(4);                  // company code (region)
   key valid_from : Date;
-  account_ref    : String(40)  not null;       // contract/account no. (synced from ECC ZI_CarrierContract)
+  account_ref    : String(40)  not null;       // contract/account no. — APP CONFIG (Open Item #2: provided into the app, not read from ECC)
   valid_to       : Date;
   currency       : String(3)   not null;
   active         : Boolean     not null default true;
