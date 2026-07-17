@@ -51,6 +51,11 @@ module.exports = {
 
   async void() {},
 
+  // customer-facing tracking link (doc 08 §8 email) — optional interface method
+  trackingUrl(tracking) {
+    return `https://track.mock.example/${encodeURIComponent(tracking)}`
+  },
+
   // HMAC-SHA256 over `${timestamp}.${rawBody}`, constant-time compare + ±5min window (S5).
   verifyWebhook(headers, rawBody, secret) {
     const ts = headers['x-mock-timestamp']
