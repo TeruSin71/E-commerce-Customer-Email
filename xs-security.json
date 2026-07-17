@@ -1,6 +1,100 @@
 {
-  "scopes": [],
-  "attributes": [],
-  "role-templates": [],
+  "xsappname": "E-commerce_Customer_Courier_Email",
+  "tenant-mode": "dedicated",
+  "description": "Courier booking system — scopes + role templates per docs/10-Courier-Security.md §1.2. Plant (werks) is a STATIC attribute value set per role instance in the cockpit (~17 per-region collections, pattern Courier_<Role>_<Region>). SuperUser has NO app scopes by design (SoD) — role assignment happens in the cockpit only.",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.view",
+      "description": "Read worklist, shipments, dashboard (plant-filtered)"
+    },
+    {
+      "name": "$XSAPPNAME.rate",
+      "description": "Request carrier rate quotes"
+    },
+    {
+      "name": "$XSAPPNAME.book",
+      "description": "Book shipments with carriers (money path)"
+    },
+    {
+      "name": "$XSAPPNAME.print",
+      "description": "Print labels at booking time"
+    },
+    {
+      "name": "$XSAPPNAME.reprint",
+      "description": "Reprint / download stored labels (labels are PII)"
+    },
+    {
+      "name": "$XSAPPNAME.void",
+      "description": "Void/refund a booking (audited)"
+    },
+    {
+      "name": "$XSAPPNAME.override",
+      "description": "Override carrier selection (audited)"
+    },
+    {
+      "name": "$XSAPPNAME.config",
+      "description": "Maintain non-secret carrier/printer/route config (audited; secrets live in the destination service only)"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "werks",
+      "description": "Plant(s) this role grants access to — STATIC value per role instance, never from the IdP. courier-srv filters every parcel-data route by it.",
+      "valueType": "string"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "CourierDispatcher",
+      "description": "Worklist, rate, book, print, reprint — own plant",
+      "scope-references": [
+        "$XSAPPNAME.view",
+        "$XSAPPNAME.rate",
+        "$XSAPPNAME.book",
+        "$XSAPPNAME.print",
+        "$XSAPPNAME.reprint"
+      ],
+      "attribute-references": [
+        "werks"
+      ]
+    },
+    {
+      "name": "CourierSupervisor",
+      "description": "Dispatcher + void + carrier override — own plant",
+      "scope-references": [
+        "$XSAPPNAME.view",
+        "$XSAPPNAME.rate",
+        "$XSAPPNAME.book",
+        "$XSAPPNAME.print",
+        "$XSAPPNAME.reprint",
+        "$XSAPPNAME.void",
+        "$XSAPPNAME.override"
+      ],
+      "attribute-references": [
+        "werks"
+      ]
+    },
+    {
+      "name": "CourierSupport",
+      "description": "View + reprint only. Cannot book. Own plant(s)",
+      "scope-references": [
+        "$XSAPPNAME.view",
+        "$XSAPPNAME.reprint"
+      ],
+      "attribute-references": [
+        "werks"
+      ]
+    },
+    {
+      "name": "CourierSysAdmin",
+      "description": "Carrier/printer/route config — own region. No role administration (SoD)",
+      "scope-references": [
+        "$XSAPPNAME.config"
+      ],
+      "attribute-references": [
+        "werks"
+      ]
+    }
+  ],
   "authorities-inheritance": false
 }
