@@ -1,0 +1,54 @@
+{
+  "mcpServers": {
+    "fiori-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@sap-ux/fiori-mcp-server@latest",
+        "fiori-mcp"
+      ],
+      "env": {}
+    },
+    "cds-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@cap-js/mcp-server"
+      ],
+      "env": {}
+    },
+    "ui5-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@ui5/mcp-server"
+      ],
+      "env": {}
+    },
+    "ruflo": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "ruflo@latest",
+        "mcp",
+        "start"
+      ],
+      "env": {}
+    },
+    "snyk": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "snyk@latest",
+        "mcp",
+        "-t",
+        "stdio"
+      ],
+      "env": {}
+    }
+  }
+}
