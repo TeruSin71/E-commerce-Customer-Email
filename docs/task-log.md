@@ -37,6 +37,28 @@
 
 ---
 
+## 1.5 — DONE (on SYNTHETIC ECC): /deliveries worklist proxy, plant-filtered
+_2026-07-17, session 1_
+
+Iterations: 1
+Tools used: ponytail (one client module, one route, zero new deps). NOTE:
+cds-mcp still disconnected — not needed (express route + fixture).
+What changed: `srv/lib/ecc.js` (the ONE ECC access module: synthetic fixture
+in dev/test, **fails closed 503 in production or when unimplemented-real-ECC
+configured** — mock can never leak to prod), `srv/routes.js` (GET /deliveries
+behind requireScope('view'), plants from token only), `srv/server.js` (mount
+routes), `test/deliveries.test.js`.
+Verification: 20 tests = 16 pass + 4 S-todo red. DONE criterion met: worklist
+returns test DOs (incl. multi-HU with weights); wrong-plant token → empty;
+multi-plant token unions; no scope → 403; no token → 401. Lint + build green.
+**⚠ SYNTHETIC-DATA TAG (per Teru's decision, 2026-07-17): verified against
+the fixture in srv/lib/ecc.js, NOT real ECC. When task 1.2 lands, wire the
+real OData client in srv/lib/ecc.js, DELETE the fixture, re-run this suite
+against a real packed delivery, and clear this tag. M3 gate requires the
+real-ECC re-verify.**
+
+---
+
 ## 0.3 (partial) — Open Item #3 CLOSED (ADR6 email selection)
 _2026-07-17, session 1_
 
