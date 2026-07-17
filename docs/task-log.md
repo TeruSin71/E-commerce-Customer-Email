@@ -37,6 +37,29 @@
 
 ---
 
+## 1.8 — DONE (on MOCK carrier): POST /book — idempotent money path, S4 GREEN
+_2026-07-17, session 1_
+
+Iterations: 1
+What changed: `srv/lib/booking.js` (doc 08 §6 order exactly:
+idempotency-replay check → per-DO in-process mutex ("exactly one carrier
+call"; single CF instance by design, DB unique (vbeln,exidv) as the
+cross-instance backstop — ponytail ceiling noted) → existing rows returned
+as-is → provider.rate to validate rateId → provider.book → label bytes
+persisted with the rows (S2 storage leg) → respond; CRITICAL no-PII log if
+carrier-booked-but-not-persisted), `srv/routes.js` (POST /book, scope
+`book`, 400/404 legs), S4 test un-todo'd + reworked onto the fixture DO
+with a carrier-call spy + routing seeds.
+Verification: 29 tests = 27 pass + 2 todo (S2 awaits 1.9 label route, S3
+awaits 1.10). **S4 GREEN and gating:** concurrent /book × 2 → both 2xx,
+same tracking, exactly ONE carrier call (spy), idempotency replay returns
+first result with no carrier call, exactly one row per (vbeln,exidv).
+Lint + build green.
+**SYNTHETIC TAG: re-verify against real NZ Post sandbox at 1.6b (S4
+re-run on real tokens is the M2 gate).**
+
+---
+
 ## 1.7 — DONE (on MOCK carrier + SYNTHETIC ECC): POST /rates
 _2026-07-17, session 1_
 
