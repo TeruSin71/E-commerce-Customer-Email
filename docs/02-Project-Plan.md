@@ -70,7 +70,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 1.6 | Provider interface + `providers/nzpost.ts` + router table; destination-only URLs (S1); fail-closed contract cache | 0.3, 0.4 | 🤖 | 🟡 *(1.6a done: interface + S1 guard GREEN + router + mock carrier; 1.6b nzpost gated)* | 1.6b: Open Item #2 + NZ Post sandbox (0.4) |
 | 1.7 | `/rates` | 1.5, 1.6 | 🤖 | 🟡 *(DONE on mock carrier + synthetic ECC; re-verify at 1.2/1.6b)* | |
 | 1.8 | `/book` — idempotent (S4), store label bytes (S2), multi-HU | 1.4, 1.7 | 🤖 | 🟡 *(DONE on mock carrier; S4 GREEN + gating; re-verify at 1.6b)* | |
-| 1.9 | `/label/:id` + `/reprint`, auth + plant-checked | 1.8 | 🤖 | ⬜ | |
+| 1.9 | `/label/:id` + `/reprint`, auth + plant-checked | 1.8 | 🤖 | ✅ *(S2 GREEN + gating; label bytes streamed, never a URL)* | |
 | 1.10 | `/shipments` + `/dashboard` via plant-scoped repo only | 1.8 | 🤖 | ⬜ | |
 | 1.11 | `/void` + audit_log; append-only grants (S8) | 1.8 | 🤖 | ⬜ | |
 | 1.12 | `/webhook/nzpost` — HMAC, timestamp window, cap, rate-limit, dedupe, fast-200, fail-closed status map (S5, S6) | 1.8 | 🤖 | ⬜ | webhook secret via destination |
