@@ -25,3 +25,4 @@
 - **Review** after code with `code-review` + `security-review`. **Verify** with `verify` / `run` against the task's DONE criteria — never claim "done" without a check.
 - **Domain tools:** `cds-mcp` (CDS/CAP), `fiori-mcp` + `ui5-mcp` (Fiori/UI5), `snyk` (security scans). Use the MCP when the task is in its domain rather than hand-writing the artifact.
 - **One task at a time**, in `docs/11` order. Append a `docs/task-log.md` entry per completed or surfaced task — it's the handover between sessions.
+- **Optional output style:** `/caveman` (`.claude/skills/caveman/`) gives terse, token-lean replies. Not required for any task; it auto-reverts to normal for security warnings, destructive-action confirmations, and code/commits/PRs.
