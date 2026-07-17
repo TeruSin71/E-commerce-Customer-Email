@@ -56,8 +56,33 @@ const SYNTHETIC_DELIVERIES = [
   },
 ]
 
+// Synthetic ZI_PlantAddress rows (~4 rows in reality; hourly cache when real).
+// ⚠ Open Item #4 (dock vs office) applies to the REAL data, not this fixture.
+const SYNTHETIC_PLANTS = {
+  1000: { werks: '1000', bukrs: '1000', name: 'NZ Warehouse', street: '1 Dock Rd', city: 'Auckland', postcode: '1010', region: 'AUK', country: 'NZ' },
+  2000: { werks: '2000', bukrs: '2000', name: 'AU Warehouse', street: '2 Wharf St', city: 'Melbourne', postcode: '3000', region: 'VIC', country: 'AU' },
+}
+
 function eccConfigured() {
   return Boolean(cds.env.requires?.ecc?.credentials || process.env.ECC_DESTINATION)
+}
+
+function guardSynthetic(what) {
+  if (eccConfigured()) {
+    throw Object.assign(new Error(`real ECC client not implemented yet (task 1.2): ${what}`), { status: 503 })
+  }
+  if (process.env.NODE_ENV === 'production') {
+    throw Object.assign(new Error('ECC destination not configured'), { status: 503 })
+  }
+  LOG.warn(`serving SYNTHETIC ${what} — dev/test only, remove when ECC is bound`)
+}
+
+// Ship-from per plant (ZI_PlantAddress, doc 08 §4.1)
+async function plantAddress(werks) {
+  guardSynthetic('plant address')
+  const plant = SYNTHETIC_PLANTS[werks]
+  if (!plant) throw Object.assign(new Error(`unknown plant ${werks}`), { status: 422 })
+  return plant
 }
 
 // Packed-not-shipped worklist (KOSTK='C' AND PKSTK='C' AND WBSTK≠'C' is applied inside the
@@ -65,16 +90,8 @@ function eccConfigured() {
 // as the server-side filter, exactly like the real OData call will ($filter=werks in ...).
 async function deliveries(plants) {
   if (!Array.isArray(plants) || plants.length === 0) return []
-  if (eccConfigured()) {
-    // Task 1.2 wires the real OData call via the ECC destination here.
-    throw Object.assign(new Error('real ECC client not implemented yet (task 1.2)'), { status: 503 })
-  }
-  if (process.env.NODE_ENV === 'production') {
-    // fail closed: production must never serve synthetic data
-    throw Object.assign(new Error('ECC destination not configured'), { status: 503 })
-  }
-  LOG.warn('serving SYNTHETIC deliveries — dev/test only, remove when ECC is bound')
+  guardSynthetic('deliveries')
   return SYNTHETIC_DELIVERIES.filter((d) => plants.includes(d.werks))
 }
 
-module.exports = { deliveries }
+module.exports = { deliveries, plantAddress }
