@@ -30,7 +30,7 @@
 ## Items already decided (do not reopen)
 
 - Clean core / ECC read-only — decided, constraint #1 in PRD
-- Courier domain wholly on BTP/Postgres — decided
+- Courier domain wholly on BTP/HANA — decided
 - Email trigger = first pickup scan — decided
 - BrowserPrint client-side printing — decided (pending only the 0.1 spike passing)
 - Direct carrier integrations behind a provider interface, aggregator swappable — decided

@@ -92,7 +92,7 @@ If someone guesses the URL or calls `courier-srv` directly with curl, Work Zone 
 - Staff picks a service (or a rule picks automatically)
 - App tells the carrier: *"book it"*
 - Carrier returns **tracking number + label**
-- App saves to its own database (Postgres on BTP)
+- App saves to its own database (SAP HANA Cloud on BTP)
 
 > ⚠️ **This step spends money.** Protected by scope, and can only happen once per delivery.
 
@@ -163,7 +163,7 @@ So we need **one small server** — `courier-srv` on BTP. ~400 lines. It does th
 | **3 CDS views** | Read-only windows into SAP | Delivery info, plant address, contract number |
 | **Cloud Connector** | Secure tunnel | Lets BTP read SAP safely |
 | **courier-srv** | Small Node app on BTP | Rates, books, webhooks, email |
-| **Postgres** | Database on BTP | Owns all courier data |
+| **SAP HANA Cloud** | Database on BTP | Owns all courier data |
 | **Fiori dispatcher** | The app staff use | Worklist, book, print |
 | **Fiori lookup tile** | Support tool | "What happened to this parcel?" |
 | **Work Zone** | Launchpad | Front door, tiles, SSO |
@@ -205,7 +205,7 @@ Custom CDS used because the released delivery API doesn't expose VEKP weight/dim
 
 ---
 
-## 8. THE DATABASE (Postgres on BTP)
+## 8. THE DATABASE (SAP HANA Cloud on BTP)
 
 ```
 carriers          → which carriers, their settings
@@ -217,7 +217,7 @@ notifications     → who we emailed, when, bounces
 printers          → which printer at which packing station
 ```
 
-### ⚠️ Carrier URLs do NOT go in Postgres
+### ⚠️ Carrier URLs do NOT go in the database
 
 **The trap:** if the app reads a web address from a database row, then calls it with our secret key attached — a system admin can change that row to point anywhere. Their own server. An internal BTP service. The cloud's own admin interface. Our key goes with it.
 
@@ -227,7 +227,7 @@ printers          → which printer at which packing station
 
 ```
 Destination service:   NZPOST_NZ = web address + key    ← locked together
-Postgres carriers:     service codes, label format,
+HANA carriers:         service codes, label format,
                        cutoff time, account ref, active flag
 ```
 
@@ -255,7 +255,7 @@ pgi_at                │
 first_scan_at         ┘
 ```
 
-> ⚠️ **Secrets never go in Postgres.** API keys live in the BTP Destination service. Postgres holds service codes, formats, account refs — not credentials, not URLs.
+> ⚠️ **Secrets never go in the database.** API keys live in the BTP Destination service. HANA holds service codes, formats, account refs — not credentials, not URLs.
 
 ### ⚠️ The label is customer data — treat it that way
 
@@ -544,7 +544,7 @@ That's regulated personal data — NZ Privacy Act, plus GDPR-style rules if any 
 - **Set a retention window** and run a purge job
 - **Scrub name/address/email from logs** and error reporting
 - **Treat `notifications` as PII-bearing** — same rules
-- **Backups and DR count too** — Postgres is now a system of record holding customer data. It needs backup, restore, and a retention story.
+- **Backups and DR count too** — HANA is now a system of record holding customer data. It needs backup, restore, and a retention story.
 
 > This is the one people forget until an auditor asks. Cheap to design in, expensive to retrofit.
 
@@ -818,7 +818,7 @@ From the security review. Each one is testable — write the test, watch it fail
 | RFC read-table | No contract, reads raw DB tables, security red flag |
 | PO per parcel | ~1,000 POs/month. Three-way match adds no control for freight under contract. |
 | Notify on every booking | 200/week × 4 regions = muted in week one |
-| Carrier URLs in Postgres | An admin could redirect our keys to their own server (security review H1) |
+| Carrier URLs in the database | An admin could redirect our keys to their own server (security review H1) |
 | Storing the carrier's label link | Customer's name + address, readable by anyone with the link (security review H2) |
 
 ---
@@ -854,7 +854,7 @@ From the security review. Each one is testable — write the test, watch it fail
                     └────────┬─────────┘
                              │
                     ┌────────┴─────────┐
-                    │    Postgres      │  ← owns ALL courier data
+                    │    HANA Cloud    │  ← owns ALL courier data
                     └──────────────────┘
                              │
                     ┌────────┴─────────┐

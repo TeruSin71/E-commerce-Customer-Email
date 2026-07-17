@@ -18,7 +18,7 @@ Ownership legend used below: **SAP/Warehouse** · **Our App (BTP)** · **Carrier
 | 02 | **Pick & pack** | SAP | SAP creates the delivery (**DO**); staff pick the goods. Packed into boxes → SAP creates **handling units (HU)**. Real weight & dimensions are recorded on the HU. |
 | 03 | **Delivery appears** | Our App | App reads SAP: shows deliveries picked ✓ packed ✓ **not yet shipped**. Staff see **only their own plant's** deliveries. Shows order #, customer, address, weight, box count. |
 | 04 | **Get a price** | App ↔ Carrier | Ask the carrier: *"cost to send this box to this address?"* Uses the **real packed weight** + our contract number → negotiated price. Carrier replies with service options, price, delivery days. |
-| 05 | **Book it** ⚠️ **SPENDS MONEY** | Our App → Carrier | Staff (or a rule) picks a service; app tells the carrier "book it". Carrier returns tracking # + label; app saves to Postgres. **Scope-protected — once per delivery only** (idempotent). |
+| 05 | **Book it** ⚠️ **SPENDS MONEY** | Our App → Carrier | Staff (or a rule) picks a service; app tells the carrier "book it". Carrier returns tracking # + label; app saves to HANA. **Scope-protected — once per delivery only** (idempotent). |
 | 06 | **Print the label** | Our App | Label returns to the browser → **BrowserPrint → Zebra printer**. Sticker goes on the box. **Reprint is free & unlimited (never re-book).** |
 | 07 | **Ship it** | SAP | Staff does **PGI** in SAP (goods issue). Box goes to the dock. Courier collects. |
 | 08 | **Courier scans it** | Carrier → App | Courier scans the box at pickup. Carrier fires a **webhook** — "we've got it". Our app receives it, **verifies the signature**, saves it. |
@@ -52,7 +52,7 @@ flowchart TB
     WZ["Work Zone + Fiori<br/>Worklist, book, print"]
     SRV["courier-srv<br/>Guards every call"]
     DEST["Destination service<br/>URLs and keys (secrets live here)"]
-    PG[("Postgres<br/>Shipments, events, labels")]
+    PG[("SAP HANA Cloud<br/>Shipments, events, labels")]
   end
 
   CAR["📦 Carriers<br/>Rate, book out — scans back"]
@@ -74,7 +74,7 @@ flowchart TB
   - **Work Zone + Fiori** — worklist, book, print
   - **courier-srv** — guards every call
   - **Destination service** — URLs and keys (all carrier secrets live here, married to their URLs)
-  - **Postgres** — shipments, events, labels
+  - **SAP HANA Cloud** — shipments, events, labels
   - **Plant check on every read** — worklist, lookup, dashboard, label
 - **Carriers** — rate, book out, scan back (webhook).
 - **Customer email** — sent on the pickup scan, shows the SO number.

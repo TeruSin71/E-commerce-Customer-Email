@@ -17,7 +17,7 @@
 | 0.2 | **FedEx onboarding paperwork started** (OAuth app + label certification). | Application submitted. (Weeks of waiting — start now.) | Phase 2 |
 | 0.3 | **Resolve Open Items #2, #3, #4** (contract source, ADR6 filter, plant address) — SE16/XK03 lookups. | Answers recorded in 12-Open-Items. | 1.4, 1.6 |
 | 0.4 | **NZ Post API sandbox access** + one real rate call with the real contract account. | Sandbox rate response matching contract pricing, saved as fixture. | 1.8 |
-| 0.5 | BTP plumbing: CF space, Postgres instance, XSUAA service + xs-security.json skeleton, destination service entries (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC dev. | `cf push` of hello-world succeeds; destination reachable. | everything |
+| 0.5 | BTP plumbing: CF space, HANA HDI container, XSUAA service + xs-security.json skeleton, destination service entries (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC dev. | `cf push` of hello-world succeeds; destination reachable. | everything |
 
 ## Phase 1 — NZ domestic, NZ Post, end-to-end
 
@@ -25,7 +25,7 @@
 
 | # | Task | Depends | DONE when |
 |---|---|---|---|
-| 1.1 | Postgres schema per 09 (all tables incl. audit_log, sla_thresholds, purge job scaffold). | 0.5 | Migrations run; constraints verified (unique (vbeln,exidv) rejects duplicate insert). |
+| 1.1 | HANA schema (CDS) per 09 (all entities incl. AuditLog, SlaThresholds, purge job scaffold). | 0.5 | Migrations run; constraints verified (unique (vbeln,exidv) rejects duplicate insert). |
 | 1.2 | ECC: build 3 CDS views per 08 §4 + Gateway OData. Technical user authorized ONLY for these (S12). | 0.3 | OData returns a real packed test delivery with HU weight/dims, ship-to, email, SO no. |
 | 1.3 | courier-srv skeleton: xssec middleware (validate → scope → plants), plant-scoped repository (09 §3), error middleware with PII scrubbing (S9). | 0.5 | S7 tests pass. Forged/expired token → 401 on every route. |
 | 1.4 | **Write failing tests S1–S4.** | 1.1, 1.3 | Four red tests in CI. |
@@ -42,7 +42,7 @@
 | 1.15 | Fiori Courier Dispatch: worklist → rate cards → book → print via BrowserPrint (per 0.1 findings), reprint, plant switcher (narrow-only). Single-HU streamlined; multi-HU shows HU list + per-label status. | 0.1, 1.9 | A test parcel booked and physically printed from Work Zone in <30s of clicks. |
 | 1.16 | Fiori Shipment Lookup tile (search vbeln/tracking/SO → status, events, reprint) + Dashboard tile (counts per state). | 1.10 | Support flow works; cross-plant search returns nothing. |
 | 1.17 | Work Zone content: 4 tiles wired to role collections; SoD verified (SuperUser has no book/config). | 1.15, 1.16 | Tile visibility matches role matrix in 10 §1.2. |
-| 1.18 | **Go-live gate:** S1–S10 green, S11–S14 evidenced, Postgres backup/restore tested, rotation runbook (S14) written. | all | Checklist signed off. NZ domestic LIVE. |
+| 1.18 | **Go-live gate:** S1–S10 green, S11–S14 evidenced, HANA Cloud backup/restore tested, rotation runbook (S14) written. | all | Checklist signed off. NZ domestic LIVE. |
 
 ## Phase 2 — Carrier expansion
 
@@ -74,5 +74,5 @@ Per region: carrier_accounts + routes rows, destinations, plant address verified
 1. **Never weaken a security control to make a test pass.** If S-tests conflict with a feature, the feature design is wrong — surface it.
 2. **Never write to SAP ECC.** If a task appears to need it, the task is misread or the design has a gap — stop and surface.
 3. **Plant/scope checks are copied-in per route via middleware + repository — never "TODO later."** A route without both does not merge.
-4. **Secrets:** never in code, env-committed files, Postgres, or logs. Destination service only.
+4. **Secrets:** never in code, env-committed files, the database, or logs. Destination service only.
 5. **When an Open Item answer contradicts these docs, the answer wins — update the doc, then proceed.**
