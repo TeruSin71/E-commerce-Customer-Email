@@ -90,4 +90,50 @@ module.exports = function routes(app) {
       next(e)
     }
   })
+
+  // 1.10 — shipment lookup by vbeln / tracking / SO. Plant-filtered ALWAYS (S3/H3).
+  app.get('/shipments', requireScope('view'), async (req, res, next) => {
+    try {
+      const repo = forPlants(req.plants)
+      const { vbeln, tracking, so } = req.query
+      const q = vbeln ? repo.byVbeln(vbeln) : tracking ? repo.byTracking(tracking) : so ? repo.bySo(so) : null
+      if (!q) return res.status(400).json({ error: 'one of vbeln, tracking, so required' })
+      res.json((await cds.run(q)).map(publicShipment))
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // 1.10 — dashboard: counts by state for the caller's plants (S3/H3). Plant-filtered.
+  app.get('/dashboard', requireScope('view'), async (req, res, next) => {
+    try {
+      const { SELECT } = cds.ql
+      const { Shipments } = cds.entities('courier')
+      const rows = await cds.run(
+        SELECT.from(Shipments).columns('werks', 'status', 'count(*) as n').where({ werks: { in: req.plants } }).groupBy('werks', 'status')
+      )
+      res.json(rows.map((r) => ({ werks: r.werks, status: r.status, count: Number(r.n) })))
+    } catch (e) {
+      next(e)
+    }
+  })
+}
+
+// projection for read APIs — never ships label bytes; PII limited to what the lookup needs
+function publicShipment(r) {
+  return {
+    id: r.ID,
+    vbeln: r.vbeln,
+    exidv: r.exidv,
+    soNumber: r.so_number,
+    werks: r.werks,
+    carrierId: r.carrier_id,
+    trackingNumber: r.tracking_number,
+    status: r.status,
+    isPrimary: r.is_primary,
+    shipToName: r.ship_to_name,
+    shipToCountry: r.ship_to_country,
+    bookedAt: r.booked_at,
+    zplRef: `/label/${r.ID}`,
+  }
 }

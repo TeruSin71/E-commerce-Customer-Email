@@ -37,6 +37,26 @@
 
 ---
 
+## 1.10 — DONE: /shipments + /dashboard, S3 GREEN — ALL S1–S4 now green
+_2026-07-17, session 1_
+
+Iterations: 1
+What changed: `srv/routes.js` (GET /shipments — scope view, lookup by
+vbeln/tracking/so through the plant-scoped repository ONLY; GET /dashboard —
+scope view, counts by (werks,status) filtered to req.plants; `publicShipment`
+projection never ships label bytes), S3 test un-todo'd + hardened (all three
+lookup paths return [] cross-plant; dashboard shows only caller plants;
+positive control proves the SAME query returns the row for its owning plant;
+reprint other-plant → 404).
+Verification: **30 tests = 30 pass, 0 todo.** S3 GREEN and gating.
+**Milestone: the entire test-first S1–S4 spine is green and gating merges**
+(S1 destination guard, S2 label auth, S3 cross-plant isolation on every read
+path, S4 double-book) — plus S7 (auth pre-handler) and S9 (PII-scrubbed
+errors). All verified on synthetic ECC + mock carrier; real-token/real-ECC
+re-verify is the M2/M3 gate. Lint + build green.
+
+---
+
 ## 1.9 — DONE: /label/:id + /reprint, S2 GREEN
 _2026-07-17, session 1_
 
