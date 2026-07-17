@@ -1,0 +1,17 @@
+// The ONLY query path to parcel data (security H3, docs/09 §3). Every accessor injects
+// `werks in plants` — there is deliberately no variant without it, and the plants list is
+// required up front (fail closed). plants = req.plants, set by the auth middleware from the JWT.
+const cds = require('@sap/cds')
+
+module.exports = function forPlants(plants) {
+  if (!Array.isArray(plants) || plants.length === 0 || plants.some((p) => typeof p !== 'string' || !p)) {
+    throw new Error('repository requires the allowed-plants list from the JWT werks attribute')
+  }
+  const { SELECT } = cds.ql
+  const { Shipments } = cds.entities('courier')
+  return {
+    byVbeln: (v) => SELECT.from(Shipments).where({ vbeln: v, werks: { in: plants } }),
+    byTracking: (t) => SELECT.from(Shipments).where({ tracking_number: t, werks: { in: plants } }),
+    // every accessor added by later tasks injects `werks: { in: plants }` the same way
+  }
+}

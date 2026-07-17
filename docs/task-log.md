@@ -24,9 +24,9 @@
   `cds deploy --to hana:E-commerce_Customer_Courier_Email-db` → duplicate
   (vbeln,exidv) insert must be rejected → flip 1.1 to DONE.
 - **0.5 agent leg done:** `xs-security.json` carries the doc 10 §1.2 scopes,
-  `werks` attribute, and 4 role templates. **Next agent-doable tasks:** 1.3
-  (courier-srv skeleton), 1.4 (failing S1–S4 tests + re-enable lint/CodeQL
-  once `srv/` exists).
+  `werks` attribute, and 4 role templates. **1.3 done:** courier-srv skeleton
+  with S7 green (offline vs real xssec). **Next agent-doable task:** 1.4
+  (failing S1–S4 tests + re-enable lint/CodeQL now that `srv/` has code).
 - **Blocked (human, critical path):** Open Items #2/#3/#4 (SAP SE16/XK03/OX10
   lookups), NZ Post sandbox (0.4), FedEx onboarding (0.2), BrowserPrint spike
   (0.1). See `12-Courier-Open-Items.md` and `02-Project-Plan.md`.
@@ -35,6 +35,35 @@
   Governance app; agent permission layer blocks `cf update-service`, so this is
   a human step). `ruflo` is DROPPED for now (security review not done, doc 14
   §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 1.3 — DONE: courier-srv skeleton (auth chain, plant-scoped repo, PII-scrubbed errors)
+_2026-07-17, session 1_
+
+Iterations: 1
+Tools used: ponytail (stdlib-first: node:test runner, node:crypto-signed test
+JWTs — zero new dependencies), cds-mcp (bootstrap idiom), @sap/xssec v4 source
+read for ground truth (createSecurityContext / checkLocalScope /
+xsUserAttributes / JWKS fetch path).
+What changed: `srv/server.js` (bootstrap wiring: auth app-wide, error handler
+last), `srv/middleware/auth.js` (validate → scope → plants; 401 before any
+claim read; fail-closed when no XSUAA bound; exact-shape /webhook/:carrier
+carve-out so path tricks can't widen the public surface),
+`srv/middleware/errors.js` (S9 scrubbing: err.message dropped, ids + stack
+frames only), `srv/lib/repository.js` (doc 09 §3 — the only Shipments query
+path, requires the plants list, fail closed), `test/s7-auth.test.js`,
+`test/errors-scrub.test.js`, `test/repository-guard.test.js`,
+`package.json` (test script: `node --test`).
+Verification: **11/11 tests green** — S7 offline against REAL xssec
+validation (JWKS fetch intercepted in-process; RS256 test keys): no token /
+expired / tampered / forged / wrong-audience → 401 before handler logic;
+valid token → handler with plants from the token attribute only; missing
+scope → 403; webhook carve-out public; path-trick paths → 401. S9 smoke: no
+name/email/address in captured log. `cds build` green. Live boot check:
+`cds serve` starts, logs fail-closed warning, `/deliveries` → 401 with no
+XSUAA bound. NOTE: S7 against real XSUAA tokens is the M2 gate — re-verify
+once xsuaa instance is bound (same human unblock as 1.1's deploy leg).
 
 ---
 
