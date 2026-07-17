@@ -44,8 +44,18 @@ jobs:
       - name: Run tests (skips gracefully until a test script exists)
         run: npm run test --if-present
 
-# DEFERRED until srv/ has real service code (ponytail: re-enable later):
-#   - lint  : `cds lint` needs eslint + @sap/eslint-plugin-cds installed; nothing
-#             to lint on an empty scaffold. Add eslint devDeps, then a lint job.
-#   - CodeQL: no JavaScript to analyze yet, so it errors. Restore codeql.yml once
-#             handlers exist under srv/.
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: eslint (incl. @sap/eslint-plugin-cds)
+        run: npx eslint .
+
+# lint + CodeQL re-enabled (task 1.4) now that srv/ has code. Making them
+# REQUIRED checks needs a ruleset edit (repo admin) — see task-log.

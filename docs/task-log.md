@@ -25,8 +25,12 @@
   (vbeln,exidv) insert must be rejected → flip 1.1 to DONE.
 - **0.5 agent leg done:** `xs-security.json` carries the doc 10 §1.2 scopes,
   `werks` attribute, and 4 role templates. **1.3 done:** courier-srv skeleton
-  with S7 green (offline vs real xssec). **Next agent-doable task:** 1.4
-  (failing S1–S4 tests + re-enable lint/CodeQL now that `srv/` has code).
+  with S7 green (offline vs real xssec). **1.4 done:** S1–S4 red todo-tests in
+  CI + lint/CodeQL re-enabled.
+- **Agent track is now BLOCKED on humans/externals:** 1.5 needs 1.2 (ECC views
+  ← Open Items #3/#4), 1.6 needs Open Item #2 + NZ Post sandbox (0.4), 1.15
+  needs the BrowserPrint spike (0.1). Plus the HANA start for 1.1's deploy
+  verify (below) and repo-admin ruleset edit for lint/CodeQL required checks.
 - **Blocked (human, critical path):** Open Items #2/#3/#4 (SAP SE16/XK03/OX10
   lookups), NZ Post sandbox (0.4), FedEx onboarding (0.2), BrowserPrint spike
   (0.1). See `12-Courier-Open-Items.md` and `02-Project-Plan.md`.
@@ -35,6 +39,35 @@
   Governance app; agent permission layer blocks `cf update-service`, so this is
   a human step). `ruflo` is DROPPED for now (security review not done, doc 14
   §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 1.4 — DONE: failing S1–S4 tests (test-first) + lint/CodeQL re-enabled
+_2026-07-17, session 1_
+
+Iterations: 1
+Tools used: ponytail (no new runtime deps; eslint devDeps were pre-planned in
+the CI comment), node:test todo-markers. NOTE: cds-mcp/snyk MCP servers were
+disconnected this session leg — not needed for this task (tests + CI config),
+logged per doc 14 §1.2 rule 3.
+What changed: `test/s1-s4.security.test.js` (four S-tests against the REAL
+in-process courier-srv with REAL xssec token validation),
+`test/helpers/xsuaa-mock.js` (shared signer + JWKS intercept; s7 suite
+refactored onto it), `eslint.config.mjs` + eslint/@sap/eslint-plugin-cds
+devDeps (`cds add lint`), `.github/workflows/ci.yml` (lint job),
+`.github/workflows/codeql.yml` (restored from history).
+Verification: 16 tests — 12 pass, **4 run RED as failing TODOs** (S1: 
+destinations module missing; S2: wrong-plant 403 leg 404s; S3/S4: routes
+404). `eslint .` clean; `cds build` green.
+**Red-in-CI convention (deliberate, review welcome):** DONE says "four red
+tests in CI", but `test` is a REQUIRED check — hard-failing tests would block
+every merge including their own PR. So the four S-tests carry
+`{ todo: 'red until task 1.x' }`: they RUN in CI and their failures are
+recorded visibly in the job log, without failing the job. The implementing
+task (1.6/1.8/1.9/1.10) REMOVES the todo marker — from then on they gate
+merges for real. Asserts must never be weakened (doc 14 §2.1 rule 1).
+Follow-up (needs repo admin): add `lint` and CodeQL `analyze` to the ruleset
+required checks — bot attempt recorded below; if it failed, it's a 👤 step.
 
 ---
 
