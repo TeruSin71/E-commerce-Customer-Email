@@ -6,6 +6,7 @@ const { requireScope } = require('./middleware/auth')
 const ecc = require('./lib/ecc')
 const { route } = require('./lib/router')
 const { providerFor } = require('./providers')
+const booking = require('./lib/booking')
 
 const json = express.json({ limit: '100kb' })
 
@@ -44,6 +45,19 @@ module.exports = function routes(app) {
         currency: routed.currency,
       })
       res.json(options)
+    } catch (e) {
+      next(e)
+    }
+  })
+
+  // 1.8 — book: idempotent money path (doc 08 §6, S4). Returns [{exidv, tracking, zplRef}].
+  app.post('/book', requireScope('book'), json, async (req, res, next) => {
+    try {
+      const { vbeln, rateId, idempotencyKey } = req.body || {}
+      if (!vbeln || !rateId) return res.status(400).json({ error: 'vbeln and rateId required' })
+      const dlv = await visibleDelivery(vbeln, req.plants)
+      const user = req.authInfo.token.payload.user_name || req.authInfo.token.payload.client_id
+      res.json(await booking.book({ dlv, rateId, idempotencyKey, user }))
     } catch (e) {
       next(e)
     }

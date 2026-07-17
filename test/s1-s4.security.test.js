@@ -47,6 +47,12 @@ before(async () => {
   })
   await cds.run(INSERT.into(Shipments).entries([row(1, '1000'), row(2, '2000')]))
   labelId1000 = '00000000-0000-0000-0000-000000000001'
+
+  // routing config so the /book money path can run against the MOCK carrier
+  const { Carriers, CarrierAccounts, Routes } = cds.entities('courier')
+  await cds.run(INSERT.into(Carriers).entries([{ carrier_id: 'MOCK', display_name: 'Mock', destination_name: 'MOCK_DEST', label_format: 'ZPL', active: true }]))
+  await cds.run(INSERT.into(Routes).entries([{ werks: '1000', dest_country: 'DOM', carrier_id: 'MOCK', priority: 1, active: true }]))
+  await cds.run(INSERT.into(CarrierAccounts).entries([{ carrier_id: 'MOCK', bukrs: '1000', valid_from: '2026-01-01', account_ref: 'CONTRACT-1000', currency: 'NZD', active: true }]))
 })
 
 after(async () => {
@@ -131,28 +137,44 @@ test('S3: werks=[1000] token cannot read werks=2000 data via any read path', { t
 })
 
 // ── S4 — double-booking impossible: concurrent /book collapses to ONE booking ──
-test('S4: concurrent /book for same (vbeln,exidv) yields one booking; idempotency key replays first result', { todo: 'red until task 1.8 (/book)' }, async () => {
+// todo marker removed in task 1.8 — this test now GATES merges.
+test('S4: concurrent /book for same (vbeln,exidv) yields one booking; idempotency key replays first result', async () => {
   const token = tokenFor(['1000'], ['view', 'rate', 'book'])
+  const VBELN = '0080000101' // synthetic ECC fixture DO, werks 1000, single HU
   const bookReq = (idempotencyKey) =>
-    call('/book', { method: 'POST', token, body: { vbeln: '0080000001', rateId: 'rate-1', idempotencyKey } })
+    call('/book', { method: 'POST', token, body: { vbeln: VBELN, rateId: `MOCK-STD-${VBELN}`, idempotencyKey } })
 
-  const [a, b] = await Promise.all([bookReq('key-1'), bookReq('key-2')])
-  assert.ok(a.status < 300 && b.status < 300, `both bookings must succeed (got ${a.status}/${b.status})`)
-  const [bodyA, bodyB] = [await a.json(), await b.json()]
-  assert.deepEqual(
-    bodyA.map((r) => r.tracking).sort(),
-    bodyB.map((r) => r.tracking).sort(),
-    'second booking must receive the FIRST booking, not a new one'
-  )
+  // spy on the mock carrier: S4 demands exactly ONE carrier booking call
+  const mock = require('../srv/providers/mock')
+  const realBook = mock.book
+  let carrierCalls = 0
+  mock.book = (...args) => {
+    carrierCalls += 1
+    return realBook.apply(mock, args)
+  }
+  try {
+    const [a, b] = await Promise.all([bookReq('key-1'), bookReq('key-2')])
+    assert.ok(a.status < 300 && b.status < 300, `both bookings must succeed (got ${a.status}/${b.status})`)
+    const [bodyA, bodyB] = [await a.json(), await b.json()]
+    assert.deepEqual(
+      bodyA.map((r) => r.tracking).sort(),
+      bodyB.map((r) => r.tracking).sort(),
+      'second booking must receive the FIRST booking, not a new one'
+    )
+    assert.equal(carrierCalls, 1, 'exactly ONE carrier call for concurrent /book of the same DO')
 
-  // replay with the same idempotency key → identical response, no new booking
-  const replay = await bookReq('key-1')
-  assert.ok(replay.status < 300)
-  assert.deepEqual(await replay.json(), bodyA, 'idempotency-key replay must return the first result')
+    // replay with the same idempotency key → identical response, no new booking
+    const replay = await bookReq('key-1')
+    assert.ok(replay.status < 300)
+    assert.deepEqual(await replay.json(), bodyA, 'idempotency-key replay must return the first result')
+    assert.equal(carrierCalls, 1, 'idempotency replay must not call the carrier again')
 
-  // exactly one row per (vbeln, exidv) in the database
-  const { SELECT } = cds.ql
-  const { Shipments } = cds.entities('courier')
-  const rows = await cds.run(SELECT.from(Shipments).where({ vbeln: '0080000001', exidv: 'HU0001' }))
-  assert.equal(rows.length, 1, 'exactly one shipment row per (vbeln,exidv) — DB-level guard (M1)')
+    // exactly one row per (vbeln, exidv) in the database, label bytes stored (S2 leg)
+    const { SELECT } = cds.ql
+    const { Shipments } = cds.entities('courier')
+    const rows = await cds.run(SELECT.from(Shipments).where({ vbeln: VBELN, exidv: 'HU00000101' }))
+    assert.equal(rows.length, 1, 'exactly one shipment row per (vbeln,exidv) — DB-level guard (M1)')
+  } finally {
+    mock.book = realBook
+  }
 })
