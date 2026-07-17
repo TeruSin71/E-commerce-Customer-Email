@@ -142,24 +142,30 @@ test('S2: label bytes column holds ZPL, not a URL', async () => {
 })
 
 // ── S3 — cross-plant reads return nothing on EVERY read path ──
-test('S3: werks=[1000] token cannot read werks=2000 data via any read path', { todo: 'red until task 1.10 (read routes via plant-scoped repo)' }, async () => {
+// todo marker removed in task 1.10 — this test now GATES merges. Seeded rows: vbeln
+// 0080000002 / tracking TRK2000A / so 0010000002 / name "Test Receiver 2" all belong to werks 2000.
+test('S3: werks=[1000] token cannot read werks=2000 data via any read path', async () => {
   const token = tokenFor(['1000'], ['view', 'reprint'])
-  for (const path of [
-    '/shipments?vbeln=0080000002',
-    '/shipments?tracking=TRK2000A',
-    '/shipments?so=0010000002',
-    '/dashboard',
-  ]) {
+  for (const path of ['/shipments?vbeln=0080000002', '/shipments?tracking=TRK2000A', '/shipments?so=0010000002']) {
     const res = await call(path, { token })
-    assert.ok([200, 403].includes(res.status), `${path}: expected 200(filtered)/403, got ${res.status}`)
-    if (res.status === 200) {
-      const text = await res.text()
-      assert.ok(!text.includes('TRK2000A'), `${path} leaked other-plant tracking number`)
-      assert.ok(!text.includes('Test Receiver 2'), `${path} leaked other-plant PII`)
-    }
+    assert.equal(res.status, 200, `${path}: expected 200 filtered-empty`)
+    const rows = await res.json()
+    assert.deepEqual(rows, [], `${path} must return nothing for another plant`)
   }
+
+  // dashboard counts only the caller's plants
+  const dash = await call('/dashboard', { token })
+  assert.equal(dash.status, 200)
+  const counts = await dash.json()
+  assert.ok(counts.every((c) => c.werks === '1000'), 'dashboard leaked another plant')
+
+  // positive control: a werks=2000 token DOES see its own row through the same path
+  const ok2000 = await call('/shipments?tracking=TRK2000A', { token: tokenFor(['2000'], ['view']) })
+  assert.equal((await ok2000.json()).length, 1, 'same query must return the row for its owning plant')
+
+  // reprint + label for the other plant's shipment → 404 (no leak), never the label bytes
   const reprint = await call('/reprint', { method: 'POST', token, body: { vbeln: '0080000002' } })
-  assert.equal(reprint.status, 403, '/reprint for other-plant delivery must be 403')
+  assert.equal(reprint.status, 404, '/reprint for other-plant delivery must be 404')
 })
 
 // ── S4 — double-booking impossible: concurrent /book collapses to ONE booking ──
