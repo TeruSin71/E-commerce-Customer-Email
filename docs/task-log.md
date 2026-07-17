@@ -29,10 +29,14 @@
   ZI_PlantAddress → real OData at 1.2) and `srv/providers/mock.js` + registry
   (→ real `providers/nzpost` at 1.6b). Every synthetic-verified task carries a
   re-verify tag; real-token/real-ECC re-verify is the M2/M3 gate.
-- **Next backend tasks:** 1.12 webhook (S5/S6) — buildable on the synthetic
-  pattern (mock HMAC + test secret); real NZ Post scheme lands with 1.6b.
-  1.13 email — 🔴 gated on **Open Item #6** (does e-commerce already send
-  tracking emails?) + Graph secret. 1.14 poller + purge (S10) — buildable now.
+- **1.12 webhook DONE** (S5/S6 green on mock; real NZ Post scheme at 1.6b).
+  **All buildable security criteria now green: S1,S2,S3,S4,S5,S6,S7,S8,S9.**
+- **1.13 email — SURFACED 🔴** gated on **Open Item #6** (does e-commerce
+  already send tracking emails?) + Graph secret. Trigger hook already marked
+  in webhook.js. Do NOT build past the gate.
+- **1.14 poller + purge (S10) — BUILDABLE next** (no external gate; involves a
+  PII-delete job — wants explicit go-ahead). Then 1.15–1.17 Fiori (1.15 gated
+  on BrowserPrint spike 0.1), 1.18 go-live gate.
 - **Still open (human):** Open Items #2 (XK03 contract → 1.6b), #4 (OX10 plant
   dock → 1.2), #6 (e-comm email → 1.13); ruleset promote lint/CodeQL to required
   checks (bot denied); NZ Post sandbox (0.4); FedEx (0.2); BrowserPrint (0.1).
@@ -45,6 +49,29 @@
   Governance app; agent permission layer blocks `cf update-service`, so this is
   a human step). `ruflo` is DROPPED for now (security review not done, doc 14
   §1.2 rule 1) — this log is the only cross-session memory.
+
+---
+
+## 1.13 — SURFACED (gate): email on first pickup — Open Item #6
+_2026-07-17, session 1_
+
+Gate check (doc 14 loop step 0): STOP, do not guess. 1.13 is 🔴 in the plan.
+Blocker: **Open Item #6 — does e-commerce ALREADY send shipping/tracking
+emails to customers?** This is not a mechanism question — it's a design one:
+if e-comm owns customer comms, we must NOT send a duplicate email (design note,
+doc 12 #6: "consider pushing tracking to e-comm instead of emailing directly").
+Building the send path now risks baking in the wrong behavior. Also needs a
+Microsoft Graph app secret via the destination service (0.5 remainder).
+State: the trigger point is already a marked hook in
+`srv/lib/webhook.js` processEvent (on first in_transit/pickup). The atomic
+DO-level claim (Notifications.sent via UPDATE..WHERE sent=false) + string
+escaping (S11) are ready to build the moment #6 is answered.
+Recommendation: ask e-commerce (Open Item #6). If they own comms → 1.13
+becomes "push tracking to e-comm", a design change to surface, not the direct
+email. If they don't → build the Graph send + atomic claim as specced.
+Next BUILDABLE task meanwhile: **1.14** (nightly fallback poller + PII purge
+job, S10) — no external gate (retention window is config, Open Item #11; job
+built regardless). Involves a PII-delete job — flagged for explicit go-ahead.
 
 ---
 
