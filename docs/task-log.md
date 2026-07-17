@@ -37,6 +37,26 @@
 
 ---
 
+## 1.7 — DONE (on MOCK carrier + SYNTHETIC ECC): POST /rates
+_2026-07-17, session 1_
+
+Iterations: 1
+What changed: `srv/routes.js` (POST /rates: scope `rate` → visible-delivery
+check (unknown and other-plant both 404 — no information leak) → plant
+address → router (fail-closed contract) → provider.rate; per-route JSON body
+parser, 100kb cap — global parser deliberately avoided so 1.12's webhook can
+read the raw body for HMAC), `srv/lib/ecc.js` (+ synthetic ZI_PlantAddress
+with bukrs; same production fail-closed guard; Open Item #4 caveat noted),
+`test/rates.test.js`.
+Verification: 29 tests = 26 pass + 3 todo (S2/S3/S4). Rate options returned
+for the test DO; price proves HU weight flows through (2.4 kg → 11.00 NZD;
+multi-HU 9.3 kg summed → 28.25); other-plant vs unknown vbeln
+indistinguishable (404/404); 403/400 legs. Lint + build green.
+**SYNTHETIC TAG: re-verify with real ECC (VEKP weights) + real NZ Post
+contract rate at 1.6b/1.2 — M3 gate.**
+
+---
+
 ## 1.6a — DONE: provider interface, S1 destination guard, router, mock carrier
 _2026-07-17, session 1 (split blessed by Teru: carrier-agnostic half now, nzpost half gated)_
 
