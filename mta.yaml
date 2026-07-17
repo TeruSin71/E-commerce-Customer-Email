@@ -95,9 +95,28 @@ resources:
       service-plan: lite
   - name: E-commerce_Customer_Courier_Email-destination
     type: org.cloudfoundry.managed-service
+    requires:
+      - name: srv-api
     parameters:
       service: destination
       service-plan: lite
+      config:
+        HTML5Runtime_enabled: true
+        init_data:
+          subaccount:
+            existing_destinations_policy: update
+            destinations:
+              # srv-api: what app/shipment-lookup/xs-app.json routes point at.
+              # Token-forwarding so the user's JWT reaches courier-srv — the
+              # scope+plant checks (S3/S7) run server-side on the real token.
+              - Name: srv-api
+                Description: courier-srv API for the Fiori apps
+                URL: ~{srv-api/srv-url}
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: NoAuthentication
+                HTML5.ForwardAuthToken: true
+                HTML5.DynamicDestination: true
 
   - name: E-commerce_Customer_Courier_Email-html5-repo-host
     type: org.cloudfoundry.managed-service
