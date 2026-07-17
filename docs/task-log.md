@@ -52,6 +52,38 @@
 
 ---
 
+## 1.14 — DONE: nightly fallback poller + PII purge job, S10 GREEN
+_2026-07-17, session 1_
+
+Iterations: 2 (jobs.test.js first hung — no server handle to close; rewrote to
+connect+deploy in-memory db directly, no HTTP server. Then CLI wrapper bug:
+`cds.entities is not a function` — needed the model loaded/compiled; fixed.)
+Ponytail verdict: NO scheduler dep, NO setInterval (a CF restart resets the
+timer). Two pure functions + a thin CLI wrapper the CF Job Scheduler / `cf
+run-task` calls nightly — scheduling is deploy-time config, not code.
+What changed: `srv/lib/jobs.js` (`purgePII({now, retentionDays})` — nulls
+ship_to_name/email/label_bytes past the window, KEEPS financial+tracking for
+tax, deletes matching Notifications; idempotent via a `[purged]` sentinel;
+counts-only log, no PII. `findStalled({now})` — booked >24h, no first_scan_at,
+still pre-transit → alert list, catches silent webhook failure),
+`srv/jobs-run.js` (CLI: load+compile model → connect db → run purge|poll),
+`test/jobs.test.js`, `eslint.config.mjs` (ignore build output `gen/`).
+Config: `PII_RETENTION_DAYS` env, default 730 (Open Item #11 confirms number;
+job built regardless).
+Verification: **44 tests = 44 pass, 0 todo.** S10 with backdated fixtures:
+800-day-old row → PII nulled, label_bytes null, rate_quoted/tracking kept, its
+Notification deleted; 10-day-old row untouched; second run purges 0
+(idempotent). Poller flags a 2-day stalled shipment, ignores recent/scanned/
+advanced. Lint clean (gen/ now ignored); cds build green. CLI wrapper loads
+model + connects + runs (verified reaching query exec; full run needs the
+deployed DB — HANA in CF, or a valid CF token locally).
+**Phase 1 backend is COMPLETE on synthetic data. S1–S10 all green.** Remaining
+Phase 1: 1.13 (email, gated Open Item #6), 1.6b (real NZ Post, gated #2+0.4),
+1.2 (real ECC, gated #4), 1.15–1.17 Fiori (1.15 gated on 0.1 BrowserPrint),
+1.18 go-live gate.
+
+---
+
 ## 1.13 — SURFACED (gate): email on first pickup — Open Item #6
 _2026-07-17, session 1_
 
