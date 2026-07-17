@@ -9,7 +9,7 @@
 | `01-Courier-Process-and-Architecture.md` | Visual overview: the ten-step Order→Ship→Invoice flow + system architecture (ECC creates, BTP ships) | First, for the big picture |
 | `07-Courier-PRD.md` | What we're building, business facts, constraints, rejected approaches | Always, first |
 | `08-Courier-TRD.md` | Stack, landscape, API surface, ECC/carrier/email/print/webhook contracts | Before any implementation task |
-| `09-Courier-Data-Model.md` | Full Postgres DDL, access-layer rule, PII/retention | Before touching the database or any query |
+| `09-Courier-Data-Model.md` | Full HANA schema (CDS entities), access-layer rule, PII/retention | Before touching the database or any query |
 | `10-Courier-Security.md` | Auth model, threat findings, 14 acceptance criteria (S1–S14) | Before EVERY task — S-criteria gate merges |
 | `11-Courier-Implementation.md` | Phased task list with dependencies and DONE criteria | Your work queue |
 | `12-Courier-Open-Items.md` | Unanswered questions with blocking flags | Before starting any task — check gates |
@@ -21,7 +21,7 @@
 1. **SAP ECC is read-only.** No writes, no Z-objects, no exceptions. A task that seems to need one is misread — stop and surface.
 2. **S1–S4 are build-blocking, test-first.** Never weaken a security control to make something pass.
 3. **Plant scope + scope check on every parcel-data route** — reads included. Enforced via middleware + the plant-scoped repository. A route without both does not merge.
-4. **Secrets live in the BTP Destination service only.** Never code, config files, Postgres, or logs. Carrier URLs are bound to their credentials there (SSRF defense).
+4. **Secrets live in the BTP Destination service only.** Never code, config files, the database, or logs. Carrier URLs are bound to their credentials there (SSRF defense).
 5. **Open Items gate tasks.** If a gating item is unanswered, stop and surface it. Never guess. When an answer contradicts a doc, the answer wins — update the doc in the same commit.
 
 ## Canonical flow (one line per step)

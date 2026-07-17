@@ -45,7 +45,7 @@ Target: ~20 seconds per parcel, rate shopping, automatic tracking, automatic cus
 - Fiori carrier setup tile (system admin)
 - Courier dashboard tile (counts, stuck items, variance)
 - `courier-srv` backend on BTP Cloud Foundry (Node.js)
-- Postgres on BTP (courier system of record)
+- SAP HANA Cloud on BTP (courier system of record)
 - Carrier integrations: NZ Post first, then FedEx, then remaining (~6 total). Aggregator (EasyPost) remains a swappable option per lane — architecture supports both.
 - Webhook receiver for carrier tracking events
 - Customer email on pickup (Microsoft Graph API)
@@ -109,7 +109,7 @@ Plant assignment = **static value baked into per-region role collections** (`Cou
 | RPA for email | Screen automation to avoid an API; brittle; still needs a trigger |
 | Z-table / TRAID stamp in ECC | Clean core |
 | RFC_READ_TABLE | Raw table access, no contract, security red flag |
-| Carrier URLs stored in Postgres | SSRF / credential exfiltration (security review H1) |
+| Carrier URLs stored in the database | SSRF / credential exfiltration (security review H1) |
 | Storing carrier's label URL | Unauthenticated PII exposure (security review H2) |
 | PO per parcel | ~1,000 POs/month, no control value |
 | Notifications on every booking | Alert fatigue; exceptions only |

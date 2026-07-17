@@ -49,7 +49,7 @@ One role TEMPLATE per role type in xs-security.json; N roles instantiated in the
 
 | ID | Finding | Design response |
 |---|---|---|
-| H1 | SSRF/credential exfil via admin-editable carrier URLs | URLs live ONLY in BTP destinations, bound to their credential. Postgres `carriers.destination_name` references a destination; it never holds a URL. Provider code refuses non-destination URLs; deny private/link-local ranges. |
+| H1 | SSRF/credential exfil via admin-editable carrier URLs | URLs live ONLY in BTP destinations, bound to their credential. HANA `Carriers.destination_name` references a destination; it never holds a URL. Provider code refuses non-destination URLs; deny private/link-local ranges. |
 | H2 | Label = PII, carrier URL fetchable unauthenticated | Download label bytes at booking, store in `shipments.label_bytes`, serve ONLY via authenticated `/label/:id` with scope+plant. Carrier URL never stored/returned. Reprint is NOT a "safe" scope. |
 | H3 | Lookup IDOR across plants (sequential tracking numbers) | Repository pattern: the only shipment query path requires the plants list (09 §3). Test cross-plant read → 403. |
 | M1 | Double-book race | DB UNIQUE (vbeln,exidv) + ON CONFLICT + idempotency key. Never check-then-write. |

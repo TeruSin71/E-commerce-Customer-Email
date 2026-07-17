@@ -26,7 +26,7 @@ BTP ┌────────────────────────�
     │    /rates /book /void /reprint /label /webhook /config        │
     │    + email on pickup + monitoring jobs                        │
     │                                                               │
-    │  Postgres          ← courier system of record                 │
+    │  HANA Cloud        ← courier system of record                 │
     │  Destination svc   ← carrier URLs + credentials, BOUND        │
     │  XSUAA             ← scopes + werks attribute → JWT           │
     └───────────────────────────────────────────────────────────────┘
@@ -46,7 +46,7 @@ BTP ┌────────────────────────�
 |---|---|---|
 | Frontend | SAPUI5/Fiori, deployed to HTML5 App Repo, surfaced in Work Zone | Managed approuter from Work Zone |
 | Backend | Node.js on BTP Cloud Foundry, single app `courier-srv` | ~400–800 LOC target. Do NOT split into microservices. |
-| DB | PostgreSQL on BTP (hyperscaler option) | Courier system of record |
+| DB | SAP HANA Cloud (hdi-shared) | Courier system of record |
 | Auth | XSUAA. `@sap/xssec` for JWT validation. | Plant = STATIC `werks` value per regional role collection (~17 collections, pattern `Courier_<Role>_<Region>`). Entra/CIS = authentication only. |
 | Secrets | BTP Destination service ONLY | URL + credential bound together per destination |
 | ECC access | OData over custom CDS views, via Cloud Connector, technical user | Read-only. Documented clean-core exception (released API lacks VEKP dims). |
