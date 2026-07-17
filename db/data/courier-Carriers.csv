@@ -1,0 +1,7 @@
+carrier_id;display_name;destination_name;label_format;active
+NZPOST;NZ Post;NZPOST_SANDBOX;ZPL;false
+POSTHASTE;Post Haste;POSTHASTE_API;ZPL;false
+FEDEX;FedEx;FEDEX_API;ZPL;false
+UPS;UPS;UPS_API;ZPL;false
+AUSPOST;Australia Post;AUSPOST_API;ZPL;false
+CANPOST;Canada Post;CANPOST_API;ZPL;false

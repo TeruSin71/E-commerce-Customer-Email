@@ -76,6 +76,32 @@
 
 ---
 
+## 0.3 — DONE: Open Items #2, #4, #6 CLOSED (Teru's answers) + carrier placeholders
+_2026-07-17, session 2_
+
+Iterations: 1 (answers recorded per doc 12 rules; answer-wins doc updates same commit)
+Answers (Teru): **#2** contract account is PROVIDED INTO the app — app config,
+not an ECC read; `ZI_CarrierContract` DROPPED from 1.2 (doc 08 §4.1 now "two
+CDS views"). **#4** plant dispatch address comes from an SPRO-style CONFIG
+table exposed via CDS (not T001W→ADRC) — dock-vs-office ambiguity gone; same
+field shape, built at 1.2. **#6** the COURIER APP owns the tracking email —
+e-comm does not send; test recipient `terulin.sinulingga@gallagher.com` until
+real ECC ADR6 email flows via 1.2 (real logic = ship_to_email from the
+delivery payload, never config).
+What changed: docs/12 (three answers), docs/08 §4.1 + §4.2 (two views;
+ZI_PlantAddress source; ZI_CarrierContract removal note), docs/09 + db/schema.cds
+(account_ref = app config comment), docs/02 (0.3 ✅, 1.2 ungated ⬜ 2-views,
+1.13 ungated ⬜, blockers table), db/data/courier-Carriers.csv +
+courier-CarrierAccounts.csv (placeholder rows for all 6 couriers,
+**active=false** — fail-closed router means placeholders can never quote;
+SysAdmin flips active when the real account ref is entered).
+Verification: cds build green; 51/51 tests green with seeds loaded (no
+collision with test-seeded MOCK rows).
+**Unblocked: 1.13 (build now), 1.6b (only NZ Post sandbox 0.4 left), 1.2 (no
+open questions — needs ECC dev access + Cloud Connector, human).**
+
+---
+
 ## 1.16 — DONE (on synthetic data): Fiori Shipment Lookup + Dashboard, S3 re-proven on OData
 _2026-07-17, session 2_
 

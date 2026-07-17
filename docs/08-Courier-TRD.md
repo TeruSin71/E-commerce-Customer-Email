@@ -75,7 +75,11 @@ All routes enforce scope + plant (see 10-Security). Plant is read from the token
 
 ## 4. ECC integration contract
 
-### 4.1 The three CDS views (build in ECC, expose via Gateway OData)
+### 4.1 The two CDS views (build in ECC, expose via Gateway OData)
+
+> Was three — `ZI_CarrierContract` dropped 2026-07-17: Open Item #2 answered,
+> the contract account is app config (`CarrierAccounts` placeholder rows per
+> courier, maintained in-app), not an ECC read.
 
 **`ZC_CourierDelivery`** — the worklist + booking payload source. One flat entity.
 
@@ -99,22 +103,22 @@ Fields: vbeln, werks, soNumber(=LIPS-VGBEL), shipToName, street, city,
 
 **`ZI_PlantAddress`** — ship-from per plant.
 ```
-T001W → ADRC on T001W-ADRNR. Fields: werks, bukrs, name, street, city,
-postcode, region, country. (~4 rows; cache in courier-srv, refresh hourly.)
-⚠ Open Item #4: confirm this is the dispatch dock, not the registered office.
+Source: SPRO-style CONFIGURATION table (Open Item #4 CLOSED 2026-07-17) — the
+address dispatch maintains for the plant, NOT the T001W→ADRC master-data join
+(kills the dock-vs-office ambiguity). Fields unchanged: werks, bukrs, name,
+street, city, postcode, region, country. (~4 rows; cache in courier-srv,
+refresh hourly.)
 ```
 
-**`ZI_CarrierContract`** — account/contract ref per carrier per company code.
-```
-Source TBD — Open Item #2 (XK03: LFB1-EIKTO? Z-table? outline agreement?).
-Fields: lifnr, carrierId, bukrs, accountRef, validFrom, validTo, currency, active.
-Cache in courier-srv with TTL. On cache-miss/ECC-unreachable: FAIL the rate
-call. NEVER fall back to no-contract (would silently quote list rates).
-```
+*(`ZI_CarrierContract` — REMOVED. Contract/account refs are app config:
+`CarrierAccounts` rows per carrier per company code, placeholder-seeded in
+`db/data/`, activated by SysAdmin when the real ref is entered. The fail-closed
+rule lives on unchanged in the router: no active contract row → no quote, ever
+— list rates can never be silently quoted.)*
 
 ### 4.2 Rules
 - CDS views are data shape ONLY. No business logic, no CASE-encoded rules.
-- ECC technical user: read-only, authorized ONLY for these three services (security S12).
+- ECC technical user: read-only, authorized ONLY for these two services (security S12).
 - Domestic/international switch: `plantAddress.country !== delivery.country`.
 
 ## 5. Carrier provider interface
