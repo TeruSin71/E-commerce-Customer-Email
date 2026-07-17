@@ -76,6 +76,44 @@
 
 ---
 
+## 0.5 (deploy leg) — agent half DONE: MTA archive builds with the Fiori app; human half SURFACED
+_2026-07-17, session 2 (Teru's go: "run your recommendation" = deploy next)_
+
+Iterations: 2 (ui5-task-zipper declared but not installed — npm install re-sync
+fixed; then `npx mbt build` GUTTED root node_modules via its module npm-ci legs
+— restored with npm install, 59/59 green again. **Gotcha for every future
+session: after a local `mbt build`, run `npm install` before tests.**)
+Ponytail verdict: wire the app into the MTA via `cds add html5-repo` (official
+generator) — no hand-written mta blocks; mbt via npx, NOT a committed dep.
+What changed: `mta.yaml` (html5 module for app/shipment-lookup: npm ci + ui5
+build → dist; app-deployer requires shipment-lookup.zip → gen/app),
+`app/shipment-lookup/package.json` (+build/start scripts, +ui5-task-zipper
+devDep), `ui5.yaml` (zipper task bundles xs-app.json into the zip),
+`xs-app.json` (REMOVED the generator's appended generic /odata route — dead:
+sits after the catch-all; our specific /odata/v4/lookup route already covers
+it), `webapp/manifest.json` (generator reformat only), `.gitignore`
+(app/*/dist/), docs/02 0.5 row.
+Verification: app build → dist/shipment-lookup.zip contains minified sources +
+manifest + xs-app.json (21 entries); **`npx -y mbt build` → full .mtar
+generated, gen/app populated — the 1.16-review deploy gap (no gen/app) is
+CLOSED.** Full suite 59/59 + lint + cds build green after node_modules restore.
+**SURFACED (👤 Teru, paste-ready, in order):**
+```
+cf login -a https://api.cf.ap10.hana.ondemand.com --sso        # token expired
+#   target: org btpsandbox / space AI_Document
+#   HANA Cloud instance: start it in cockpit if stopped (hana-free auto-stops)
+cf install-plugin multiapps -f
+npx -y mbt build
+cf deploy mta_archives/E-commerce_Customer_Courier_Email_1.0.0.mtar
+```
+Then agent re-verifies on real tokens: S7 (401/403 legs), S3 (cross-plant) via
+an xsuaa service-key token against the deployed URL = **M2**. GRAPH +
+NZPOST_SANDBOX destinations remain separate human steps (M4 / 1.6b).
+Classification of the stop: (c) environment — CF auth is SSO-interactive; the
+agent permission layer additionally blocks service state changes (HANA start).
+
+---
+
 ## 1.13 — DONE (Graph send pending binding): email on first pickup, exactly-once + sweep
 _2026-07-17, session 2_
 

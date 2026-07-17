@@ -54,7 +54,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 0.2 | **FedEx onboarding** (OAuth app + label certification) | 👤 | ⬜ | Long lead-time — **start now**. Blocks Phase 2 |
 | 0.3 | **Resolve Open Items #2, #3, #4** (contract source, ADR6 email filter, plant address) | 👤 | ✅ *(all three closed 2026-07-17 — #2 app config, #3 ADDRNUMBER alone, #4 SPRO config table via CDS)* | |
 | 0.4 | **NZ Post API sandbox** + one real contract-priced rate call | 👤 | ⬜ | Blocks 1.6, 1.8. Save response as fixture |
-| 0.5 | **BTP plumbing** — CF space, HANA HDI container, XSUAA + xs-security, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC | 👤/🤖 | 🟡 | CF space ✅, HANA available ✅, `mta.yaml` ✅, `xs-security.json` scopes+roles per doc 10 §1.2 ✅. **TODO:** HDI container ✅ created + schema deployed (2026-07-17); still open: xsuaa instance, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector, first `cf deploy` |
+| 0.5 | **BTP plumbing** — CF space, HANA HDI container, XSUAA + xs-security, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector to ECC | 👤/🤖 | 🟡 | CF space ✅, HANA HDI + schema deployed ✅, `mta.yaml` ✅, `xs-security.json` ✅. **NEW (2026-07-17): full MTA archive builds green locally (`npx -y mbt build` — db + srv + Fiori app zip in gen/app).** Still open (👤): `cf login` (SSO, token expired), HANA start if stopped, `cf install-plugin multiapps`, `cf deploy` of the .mtar, destinations (NZPOST_SANDBOX, GRAPH), Cloud Connector. Then 🤖 re-verifies S7/S3 on real tokens (M2) |
 
 ## Phase 1 — NZ domestic, NZ Post, end-to-end
 

@@ -11,6 +11,7 @@ default-*.json
 mta_archives/
 *_mta_build_tmp
 *.mtar
+app/*/dist/
 
 # Other
 .DS_Store

@@ -44,6 +44,10 @@ modules:
     build-parameters:
       build-result: app/
       requires:
+        - name: Ecommerce_Customer_Courier_Emailshipmentlookup
+          artifacts:
+            - shipment-lookup.zip
+          target-path: app/
     requires:
       - name: E-commerce_Customer_Courier_Email-auth
       - name: srv-api
@@ -52,6 +56,18 @@ modules:
           content-target: true
           config:
             HTML5Runtime_enabled: true
+
+  - name: Ecommerce_Customer_Courier_Emailshipmentlookup
+    type: html5
+    path: app/shipment-lookup
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
 
 resources:
   - name: E-commerce_Customer_Courier_Email-auth
