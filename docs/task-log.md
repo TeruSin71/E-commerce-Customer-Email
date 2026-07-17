@@ -37,6 +37,28 @@
 
 ---
 
+## 1.11 — DONE: /void + append-only audit, S8 GREEN
+_2026-07-17, session 1_
+
+Iterations: 1 (one self-caught structural slip: /void first pasted after the
+module.exports closing brace; fixed before running — no bad commit)
+What changed: `srv/lib/audit.js` (append-only AuditLog writer — the ONLY
+writer, exposes `record` only, no update/delete path in code; DB INSERT/SELECT-
+only grant is a HANA .hdbrole at deploy, verified at go-live), `srv/routes.js`
+(POST /void — scope void, plant-checked, per-HU: carrier void → mark voided →
+audit row with before/after; exidv narrows to one HU), `test/void-audit.test.js`.
+Verification: **33 tests = 33 pass, 0 todo.** S8 green: void writes exactly
+one audit row (actor=tester, object=vbeln/exidv, before {status:booked} /
+after {status:voided}); audit module surface is `['record']` only (no mutate
+path); void needs the void scope (book→403) + right plant (other→404).
+Lint + build green.
+**Phase 1 backend money-path + read/lookup + void are complete on synthetic
+data.** Next backend tasks are GATED: 1.12 webhook (needs a webhook secret
+via destination — 0.5 remainder), 1.13 email (Open Item #6 + Graph secret).
+1.6b (real NZ Post) gated on Open Item #2 + sandbox (0.4).
+
+---
+
 ## 1.10 — DONE: /shipments + /dashboard, S3 GREEN — ALL S1–S4 now green
 _2026-07-17, session 1_
 
