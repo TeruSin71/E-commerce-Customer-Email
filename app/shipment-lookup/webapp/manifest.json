@@ -1,0 +1,189 @@
+{
+  "_version": "1.73.1",
+  "sap.app": {
+    "id": "shipmentlookup",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "resources": "resources.json",
+    "sourceTemplate": {
+      "id": "@sap/generator-fiori:lrop",
+      "version": "1.28.0",
+      "toolsId": "bbff5d3a-acf5-47f7-905b-ece9379a9c48"
+    },
+    "dataSources": {
+      "mainService": {
+        "uri": "/odata/v4/lookup/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "odataVersion": "4.0"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "CourierShipment-lookup": {
+          "semanticObject": "CourierShipment",
+          "action": "lookup",
+          "title": "{{appTitle}}",
+          "signature": { "parameters": {}, "additionalParameters": "allowed" }
+        },
+        "CourierShipment-monitor": {
+          "semanticObject": "CourierShipment",
+          "action": "monitor",
+          "title": "{{dashboardTitle}}",
+          "signature": { "parameters": {}, "additionalParameters": "allowed" }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "",
+      "favIcon": "",
+      "phone": "",
+      "phone@2": "",
+      "tablet": "",
+      "tablet@2": ""
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.136.7",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.fe.core": {},
+        "sap.fe.templates": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "shipmentlookup.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "operationMode": "Server",
+          "autoExpandSelect": true,
+          "earlyRequests": true
+        }
+      },
+      "@i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "uri": "i18n/i18n.properties"
+      }
+    },
+    "resources": {
+      "css": []
+    },
+    "routing": {
+      "config": {},
+      "routes": [
+        {
+          "pattern": ":?query:",
+          "name": "ShipmentsList",
+          "target": "ShipmentsList"
+        },
+        {
+          "pattern": "Shipments({key}):?query:",
+          "name": "ShipmentsObjectPage",
+          "target": "ShipmentsObjectPage"
+        },
+        {
+          "pattern": "dashboard:?query:",
+          "name": "DashboardPage",
+          "target": "DashboardPage"
+        }
+      ],
+      "targets": {
+        "ShipmentsList": {
+          "type": "Component",
+          "id": "ShipmentsList",
+          "name": "sap.fe.templates.ListReport",
+          "options": {
+            "settings": {
+              "contextPath": "/Shipments",
+              "variantManagement": "Page",
+              "navigation": {
+                "Shipments": {
+                  "detail": {
+                    "route": "ShipmentsObjectPage"
+                  }
+                }
+              },
+              "controlConfiguration": {
+                "@com.sap.vocabularies.UI.v1.LineItem": {
+                  "tableSettings": {
+                    "type": "ResponsiveTable"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ShipmentsObjectPage": {
+          "type": "Component",
+          "id": "ShipmentsObjectPage",
+          "name": "sap.fe.templates.ObjectPage",
+          "options": {
+            "settings": {
+              "editableHeaderContent": false,
+              "contextPath": "/Shipments",
+              "content": {
+                "header": {
+                  "actions": {
+                    "ReprintAction": {
+                      "press": "shipmentlookup.ext.Reprint.onReprint",
+                      "text": "{i18n>reprintAction}",
+                      "enabled": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "DashboardPage": {
+          "type": "Component",
+          "id": "DashboardPage",
+          "name": "sap.fe.core.fpm",
+          "options": {
+            "settings": {
+              "viewName": "shipmentlookup.ext.dashboard.Dashboard"
+            }
+          }
+        }
+      }
+    }
+  },
+  "sap.fiori": {
+    "registrationIds": [],
+    "archeType": "transactional"
+  },
+  "sap.fe": {
+    "app": {
+      "enableLazyLoading": true
+    }
+  }
+}

@@ -1,0 +1,37 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:f="sap.f"
+    xmlns="sap.m"
+    controllerName="shipmentlookup.ext.dashboard.Dashboard">
+    <f:DynamicPage id="dashboardPage">
+        <f:title>
+            <f:DynamicPageTitle id="dashboardTitle">
+                <f:heading>
+                    <Title id="dashboardHeading" text="{i18n>dashboardTitle}" />
+                </f:heading>
+            </f:DynamicPageTitle>
+        </f:title>
+        <f:content>
+            <VBox id="dashboardContent">
+                <MessageStrip id="dashboardError" text="{i18n>dashboardLoadFailed}" type="Error"
+                    visible="{counts>/error}" class="sapUiSmallMarginBottom" />
+                <Table id="dashboardCounts" items="{counts>/rows}" growing="true" busy="{counts>/busy}">
+                    <columns>
+                        <Column id="colWerks"><Text id="colWerksLabel" text="{i18n>colPlant}" /></Column>
+                        <Column id="colStatus"><Text id="colStatusLabel" text="{i18n>colStatus}" /></Column>
+                        <Column id="colCount" hAlign="End"><Text id="colCountLabel" text="{i18n>colCount}" /></Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem id="dashboardRow">
+                            <cells>
+                                <Text id="cellWerks" text="{counts>werks}" />
+                                <Text id="cellStatus" text="{counts>status}" />
+                                <Text id="cellCount" text="{counts>count}" />
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </VBox>
+        </f:content>
+    </f:DynamicPage>
+</mvc:View>

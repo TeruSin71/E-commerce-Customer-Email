@@ -1,0 +1,28 @@
+{
+  "generationParameters": {
+    "generationDate": "Fri Jul 17 2026 20:01:53 GMT+0000 (Coordinated Universal Time)",
+    "generatorPlatform": "CLI",
+    "serviceType": "Local CAP",
+    "metadataFilename": "",
+    "serviceUrl": "http://localhost:4004/odata/v4/lookup/",
+    "appName": "shipment-lookup",
+    "appTitle": "Shipment Lookup",
+    "appDescription": "Courier Shipment Lookup — support search by delivery/tracking/SO with status, lifecycle timestamps, reprint",
+    "appNamespace": "",
+    "ui5Theme": "sap_horizon",
+    "ui5Version": "1.136.7",
+    "enableEslint": true,
+    "enableTypeScript": false,
+    "showMockDataInfo": false,
+    "generatorVersion": "1.28.0",
+    "template": "List Report Page V4",
+    "generatorName": "SAP Fiori Application Generator",
+    "entityRelatedConfig": [
+      {
+        "type": "Main Entity",
+        "value": "Shipments"
+      }
+    ],
+    "launchText": "To launch the generated app, start your CAP project:  and navigate to the following location in your browser:\n\nhttp://localhost:4004/shipment-lookup/webapp/index.html"
+  }
+}
