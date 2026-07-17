@@ -37,6 +37,21 @@
 
 ---
 
+## 0.3 (partial) — Open Item #3 CLOSED (ADR6 email selection)
+_2026-07-17, session 1_
+
+Iterations: 1 (human answer, recorded per doc 12 rules)
+What changed: `docs/12` #3 → ✅ CLOSED, `docs/08` §4.1 ADR6 join note updated
+in the same commit (answer wins).
+Answer (Teru): delivery → VBPA partner function WE (SH) → exactly ONE ADRNR →
+exactly ONE ADR6 row per CPD address. Select by ADDRNUMBER alone — no
+CONSNUMBER/FLGDEFAULT filter. 1.2 keeps the join deterministic regardless
+(lowest CONSNUMBER) so a surprise second row can never fan out a delivery.
+Still open in 0.3: **#2** (carrier contract/account source — XK03) and
+**#4** (plant dispatch address — OX10). 1.2 remains gated on #4 (+#2 for 1.6).
+
+---
+
 ## 1.1 (deploy leg) — DONE: schema deployed to HANA, S4 guard verified live
 _2026-07-17, session 1 (after human started the HANA instance)_
 
