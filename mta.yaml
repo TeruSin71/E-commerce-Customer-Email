@@ -146,6 +146,15 @@ resources:
                 Authentication: NoAuthentication
                 HTML5.ForwardAuthToken: true
                 HTML5.DynamicDestination: true
+              # Work Zone content-provider RUNTIME destination (site host).
+              # Subdomain confirmed by Teru 2026-07-18 from the live site URL.
+              - Name: courier-cdm-rt
+                Description: Work Zone content-provider runtime destination
+                URL: https://btpsandbox.launchpad.cfapps.ap10.hana.ondemand.com
+                Type: HTTP
+                ProxyType: Internet
+                Authentication: NoAuthentication
+                CEP.HTML5contentprovider: true
 
   - name: E-commerce_Customer_Courier_Email-html5-repo-host
     type: org.cloudfoundry.managed-service

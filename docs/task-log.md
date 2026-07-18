@@ -11,6 +11,41 @@
 
 ---
 
+## 1.17a — DONE (agent half): Work Zone content as code — CDM served live from the HTML5 repo
+_2026-07-18, session 3 (PRs #39–#41 + this one; split blessed by Teru: lookup+dashboard
+tiles now, dispatch tile stays gated on 0.1)_
+
+Iterations: 2 (PR #40's edit adding the workzone-dest-content module FAILED silently —
+the commit message claimed it, deploy-log verification caught zero trace; classification
+(a), re-added in PR #41. Lesson: verify the built mtad, not the intent.)
+Tools used: superpower, ponytail (rejected an html5-module restructure the research
+proposed — the working upload path stays; adopted only additive pieces), research
+Workflow (3 parallel researchers + synthesis; key finding: NO Work Zone CF service
+needed — content ships via the HTML5 repo as a content provider, so cf marketplace
+lacking SAPLaunchpad/build-workzone-standard is NOT a blocker), cf CLI, mtar inspection.
+What changed: `app/workzone/CommonDataModel.json` (catalog + group + space/page + 3
+roles dispatcher/supervisor/support — SysAdmin has no UI app), manifest.json
+(+sap.cloud courier.service), `mta.yaml` (CDM → gen/app/cdm.json rides the
+app-deployer upload; courier-html5-rt app-runtime + courier-html5-rt-key;
+workzone-dest-content module → courier-cdm-dt design-time destination; srv-api
+destination with HTML5.ForwardAuthToken from PR #39; courier-cdm-rt runtime
+destination — subdomain `btpsandbox` confirmed by Teru from the live site URL).
+Verification (live): deploy green; key + courier-cdm-dt created by the deployer;
+**GET /applications/cdm/courier.service with the runtime service key → HTTP 200,
+all entities** — the exact read Work Zone's Channel Manager performs. srv fail-closed
+spot-check (401 no-token) still green.
+**Remaining (👤 Teru, cockpit — the human half of 1.17a):**
+1. Work Zone → Channel Manager → New content provider: design-time dest
+   courier-cdm-dt, runtime dest courier-cdm-rt → sync.
+2. Content Manager: add roles courier_dispatcher/supervisor/support to the
+   E-commerce Order Tracking site; map each to its Courier_<Role>_NZ collection.
+3. Role collections from the deployed templates (werks=1000) + assign to Teru's
+   CIS user row (NOT sap.default — doc 13 gotcha).
+Then: click the Shipment Lookup tile → the true role-gated E2E (auth → scope →
+plant → OData → FE in Work Zone).
+
+---
+
 ## 0.5 — DONE: first `cf deploy` GREEN — M1 reached, M2 auth chain evidenced on real tokens
 _2026-07-17, session 3 (Teru provided SSO passcode; deploy + HANA start passed the permission gate this session)_
 
