@@ -78,7 +78,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 1.14 | Nightly fallback poller + purge job (configurable retention, S10) | 1.12 | 🤖 | ✅ *(S10 GREEN with backdated fixtures; CF Job Scheduler calls srv/jobs-run.js)* | window = Open Item #11 (default 730d; job built regardless) |
 | 1.15 | Fiori Courier Dispatch — worklist→rate→book→print (BrowserPrint), plant switcher | 0.1, 1.9 | 🤖 | 🔴 | Open Item 0.1 (spike) |
 | 1.16 | Fiori Shipment Lookup + Dashboard tiles | 1.10 | 🤖 | ✅ *(FE List Report/Object Page over new read-only OData `LookupService`; S3 re-proven on OData path; dashboard page over /dashboard; Work Zone wiring = 1.17)* | |
-| 1.17 | Work Zone content — 4 tiles wired to role collections; SoD verified | 1.15, 1.16 | 🤖 | 🟡 *(1.17a COMPLETE 2026-07-18: both tiles LIVE in the site, role-gated, Lookup renders plant-filtered on a real user — content as code PRs #39–#42 + btp-CLI role/werks/assignment automation, see task-log. Remaining: dispatch + config tiles, gated on 0.1/1.15)* | |
+| 1.17 | Work Zone content — 4 tiles wired to role collections; SoD verified | 1.15, 1.16 | 🤖 | 🟡 *(1.17a 2026-07-18: both tiles live + role-gated; **Lookup verified working on a real user**; **Dashboard data-load OPEN BUG** — routing fixed, counts still fail after 3 attempts (PRs #44–#46), needs browser console/network evidence FIRST — see task-log SURFACED entry. Remaining: dashboard bug + dispatch/config tiles gated on 0.1/1.15)* | |
 | 1.18 | **Go-live gate** — S1–S10 green, S11–S14 evidenced, HANA backup/restore tested, rotation runbook | all | 👤/🤖 | ⬜ | ⚠ free `hana-free` has no DR SLA → paid HANA plan before prod |
 
 ## Phase 2 — Carrier expansion
