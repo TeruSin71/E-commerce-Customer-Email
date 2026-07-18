@@ -11,7 +11,60 @@
 
 ---
 
+## Subaccount ops (no doc-11 id) — Work Zone cross-site tile bleed root-caused + FIXED; 1.17a dashboard bug formally CLOSED
+_2026-07-18, session 5 (agent investigation + btp CLI; cockpit/Work Zone clicks by Teru)_
+
+Iterations: 3 dead ends before the fix, all worth recording:
+(1) removing DG spaces from the Everyone role alone → DG site died with
+"Cannot find a space assigned to you" (no user held the new role yet) — recovered
+by re-adding; (2) per-site exclusion impossible — **Everyone's toggle is LOCKED ON
+for every site** in a site's Role Assignments; (3) role-collection **file import:
+the cockpit has NO Import button** (export only, checked on this Free Tier
+subaccount) — btp CLI is the maintenance path.
+Tools used: cf CLI read-only (`cf mtas`, `cf html5-list` — proved the 3 tiles are
+DG apps `govauthfields|govauthmatrix|govauthrouting` on the DG app-host), btp CLI
+under Teru's SSO (assign + read-back), SAP docs (local Work Zone roles auto-create
+a matching role collection).
+What changed (repo): docs/13 §3a (role-collection export/CLI runbook — the
+"how to update a collection manually" note), docs/02 1.17 row (dashboard bug →
+RESOLVED), resolved-pointer on the SURFACED entry below, this entry.
+What changed (subaccount, executed by Teru + agent CLI):
+- Work Zone role "Customer Data Governance" created (Content Manager) carrying
+  the 4 DG spaces + apps; toggled ON for the DG site.
+- Role collections `Customer_Data_Governance` (underscores — auto-created,
+  matches the WZ role id, almost certainly the linked one) AND the manually
+  created duplicate `Customer Data Governance` both assigned to
+  terulin.sinulingga@gallagher.com via `btp assign security/role-collection …
+  --of-idp sap.custom` (both assigned to be safe; Benson deliberately excluded
+  at Teru's request). Read-back verified via `btp get security/user`.
+- The 4 DG spaces (CDS Explorer, Authorization Process Flow, Customers Data
+  Governence, Inbox) REMOVED from `sap_subaccount_everyone`.
+Verification (Teru, fresh incognito): DG site renders all 4 spaces via the new
+role; **Pricing Systemization AND the courier E-commerce Order Tracking site no
+longer show DG tiles**; courier tiles intact.
+Root cause for the record: the DG content sat on the built-in **Everyone** role
+("visible to all users") — content on Everyone renders on EVERY site in the
+subaccount, unavoidably. NOT related: the cockpit "2 Configuration issues"
+(DG's `srv-api`/`customerdatagovernance_uaa` sharing
+`sap.cloud.service=customerdatagovernance`) — that is a separate DG-internal
+destination duplicate, investigated, still present, not ours to fix.
+**1.17a dashboard closure (was SURFACED below as an open bug):** RESOLVED
+2026-07-18 — the stale layer was the Work Zone CONTENT PROVIDER pinning the app
+version at sync time; an applicationVersion bump + `cf deploy` does NOT
+propagate until the provider is re-synced. Teru re-synced the "Ecommerce"
+provider (Channel Manager → 🔄) and the v0.0.3 fixes (OData-model dashboard
+load + HashChanger routing — which were correct all along) took effect
+immediately. Deploy checklist for every UI change: bump `applicationVersion` →
+`cf deploy` → **re-sync the content provider** → verify in fresh incognito
+with F12 open.
+
+---
+
 ## 1.17a — SURFACED (open bug): Courier Dashboard tile loads no data — unresolved after 3 fixes
+> **RESOLVED 2026-07-18 — see the session-5 entry above.** Root cause was the
+> Work Zone content provider serving a stale pinned app version (re-sync fixed
+> it); the v0.0.3 code below was correct. Kept unedited as the honest record.
+
 _2026-07-18, session 4 wrap. **READ THIS BEFORE TOUCHING THE DASHBOARD.**_
 
 State at session end (per Teru's live testing, PRs #44–#46 all merged+deployed):

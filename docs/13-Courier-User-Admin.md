@@ -51,6 +51,42 @@ Multi-plant user (e.g. support covering NZ+AU): assign `Courier_Support_NZ` AND 
 
 **Pairing caution (from 10-Security §1.2):** scopes union globally across a user's collections. Pairing a Dispatcher collection in one region with any collection in another technically extends book-capable scopes to the second plant. Acceptable for trusted staff; if a stricter split is ever required for a specific user, raise it — do not improvise.
 
+## 3a. Maintaining a collection's members: export file + btp CLI (learned 2026-07-18)
+
+Recorded while fixing the Work Zone "Everyone" tile bleed (task-log session 5).
+
+**Export (works).** Role collection page → **Export** → CSV with four sections
+(Roles / Users / User Groups / Attribute Mappings). User rows:
+`ID,Identity Provider,E-Mail,First Name,Last Name`, e.g.
+`jane@gallagher.com,sap.custom,jane@gallagher.com,Jane,Doe`.
+Export a known-good collection (e.g. `~ecommerce_courier_dispatcher`) to get the
+exact format; the IdP column must be `sap.custom` (§3 rule 3).
+
+**Import (does NOT work here).** This cockpit version (Free Tier subaccount,
+checked 2026-07-18) has **no Import button** on the collection page — the export
+format cannot be uploaded back. Don't hunt for it; use the CLI.
+
+**btp CLI (the proven path).**
+```
+btp login --sso manual                    # prints a URL; open it, paste the code back
+btp assign security/role-collection "<collection>" --to-user <email> \
+    --of-idp sap.custom --subaccount 533a28c1-cf90-4ca0-a70e-f888f6a7e55f
+btp get security/user <email> --of-idp sap.custom --subaccount <same>   # verify
+```
+Loop the assign over users × collections for bulk work — this is the Phase-3
+path for the ~16 remaining regional collections (doc 13 §2).
+
+**Work Zone content roles (gotchas).** A role created in Work Zone's Content
+Manager auto-creates a matching BTP role collection: local roles get the role id
+with underscores (e.g. `Customer_Data_Governance`), channel-provider roles a `~`
+prefix (e.g. `~ecommerce_courier_dispatcher`). These collections are
+**membership-only** — an empty Roles section is normal, do not add roles to
+them. Watch for manually created near-duplicates (spaces vs underscores); the
+one matching the WZ role id is the linked one — when in doubt, assign both.
+Content attached to the built-in **Everyone** role renders on EVERY site in the
+subaccount and its site toggle is locked ON — scope site content to a real role
++ collection instead.
+
 ## 4. Region transfer
 
 Jane moves NZ → AU:
