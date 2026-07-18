@@ -78,7 +78,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 1.14 | Nightly fallback poller + purge job (configurable retention, S10) | 1.12 | 🤖 | ✅ *(S10 GREEN with backdated fixtures; CF Job Scheduler calls srv/jobs-run.js)* | window = Open Item #11 (default 730d; job built regardless) |
 | 1.15 | Fiori Courier Dispatch — worklist→rate→book→print (BrowserPrint), plant switcher | 0.1, 1.9 | 🤖 | 🔴 | Open Item 0.1 (spike) |
 | 1.16 | Fiori Shipment Lookup + Dashboard tiles | 1.10 | 🤖 | ✅ *(FE List Report/Object Page over new read-only OData `LookupService`; S3 re-proven on OData path; dashboard page over /dashboard; Work Zone wiring = 1.17)* | |
-| 1.17 | Work Zone content — 4 tiles wired to role collections; SoD verified | 1.15, 1.16 | 🤖 | 🟡 *(1.17a agent half DONE 2026-07-18: CDM content as code served live from the HTML5 repo, all three destinations wired — PRs #39–#42; human half = Channel/Content Manager wiring + role collections, runbook in task-log; dispatch tile gated on 0.1)* | |
+| 1.17 | Work Zone content — 4 tiles wired to role collections; SoD verified | 1.15, 1.16 | 🤖 | 🟡 *(1.17a COMPLETE 2026-07-18: both tiles LIVE in the site, role-gated, Lookup renders plant-filtered on a real user — content as code PRs #39–#42 + btp-CLI role/werks/assignment automation, see task-log. Remaining: dispatch + config tiles, gated on 0.1/1.15)* | |
 | 1.18 | **Go-live gate** — S1–S10 green, S11–S14 evidenced, HANA backup/restore tested, rotation runbook | all | 👤/🤖 | ⬜ | ⚠ free `hana-free` has no DR SLA → paid HANA plan before prod |
 
 ## Phase 2 — Carrier expansion
@@ -137,7 +137,7 @@ Invoice ingestion automation (if 3b earned it); `sla_thresholds` from observed p
 |---|---|---|---|
 | **M0** | Foundation ready (repo, gate, deploy descriptor) | — | ✅ **reached** |
 | **M1** | BTP plumbing bound + hello-world deployed | 0.5 | ✅ **reached 2026-07-17** — `cf deploy` green, srv live, fail-closed 401s verified |
-| **M2** | Security spine live (schema + courier-srv + S1–S4 red→green) | 1.1, 1.3, 1.4 | 🟡 auth chain proven on real xsuaa tokens (validate→scope 403); role-based S3 on real users needs role collections (1.17) |
+| **M2** | Security spine live (schema + courier-srv + S1–S4 red→green) | 1.1, 1.3, 1.4 | ✅ **reached 2026-07-18** — S7/S3 evidenced on a real CIS user token end-to-end (Work Zone tile → srv-api → view scope → werks=1000 filter → OData on live HANA; empty-DB pass) |
 | **M3** | NZ book+print works end-to-end | 1.5–1.9 + 0.1 | test parcel printed from Work Zone < 30 s |
 | **M4** | NZ webhook + email + monitoring | 1.12–1.14 | one email on real sandbox pickup |
 | **M5** | **NZ domestic LIVE** (go-live gate) | 1.18 | S1–S10 green, S11–S14 evidenced, paid HANA plan, DR tested |
