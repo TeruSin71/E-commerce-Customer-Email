@@ -18,3 +18,6 @@ app/*/dist/
 
 # @cap-js/cds-typer
 @cds-models
+
+# graphify knowledge-graph output (may capture repo content — never commit)
+graphify-out/
