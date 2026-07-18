@@ -6,7 +6,7 @@
 
 **Legend:** ✅ done · 🟡 partial / in progress · ⬜ not started · 🔴 blocked (needs a human answer or external lead-time) · 👤 human task · 🤖 agent-doable now
 
-_Last updated: 2026-07-17._
+_Last updated: 2026-07-18._
 
 ---
 
@@ -78,7 +78,7 @@ Not in doc 11; completed to make the project buildable, deployable, and safe for
 | 1.14 | Nightly fallback poller + purge job (configurable retention, S10) | 1.12 | 🤖 | ✅ *(S10 GREEN with backdated fixtures; CF Job Scheduler calls srv/jobs-run.js)* | window = Open Item #11 (default 730d; job built regardless) |
 | 1.15 | Fiori Courier Dispatch — worklist→rate→book→print (BrowserPrint), plant switcher | 0.1, 1.9 | 🤖 | 🔴 | Open Item 0.1 (spike) |
 | 1.16 | Fiori Shipment Lookup + Dashboard tiles | 1.10 | 🤖 | ✅ *(FE List Report/Object Page over new read-only OData `LookupService`; S3 re-proven on OData path; dashboard page over /dashboard; Work Zone wiring = 1.17)* | |
-| 1.17 | Work Zone content — 4 tiles wired to role collections; SoD verified | 1.15, 1.16 | 🤖 | 🟡 *(1.17a 2026-07-18: both tiles live + role-gated; **Lookup verified working on a real user**; **Dashboard data-load OPEN BUG** — routing fixed, counts still fail after 3 attempts (PRs #44–#46), needs browser console/network evidence FIRST — see task-log SURFACED entry. Remaining: dashboard bug + dispatch/config tiles gated on 0.1/1.15)* | |
+| 1.17 | Work Zone content — 4 tiles wired to role collections; SoD verified | 1.15, 1.16 | 🤖 | 🟡 *(1.17a 2026-07-18: both tiles live + role-gated + **verified working on a real user** — Lookup (FE List Report) AND Dashboard (counts). **Dashboard bug RESOLVED**: was a stale Work Zone content-provider sync (KBA 3509334), fixed by re-syncing the Ecommerce provider; deployed code was byte-verified correct 0.0.3 all along. New 3-leg deploy checklist (version bump → cf deploy → provider re-sync) in task-log. Remaining: dispatch/config tiles gated on 0.1/1.15)* | |
 | 1.18 | **Go-live gate** — S1–S10 green, S11–S14 evidenced, HANA backup/restore tested, rotation runbook | all | 👤/🤖 | ⬜ | ⚠ free `hana-free` has no DR SLA → paid HANA plan before prod |
 
 ## Phase 2 — Carrier expansion

@@ -11,8 +11,75 @@
 
 ---
 
+## 1.17a — RESOLVED: Courier Dashboard data-load bug fixed — stale WORK ZONE CONTENT-PROVIDER sync (not the code, not the browser cache)
+_2026-07-18, session 4 — closed with live browser evidence + independent byte-level confirmation._
+
+**Root cause (proven this time, not guessed):** the Work Zone site pins each app to a
+version-keyed immutable URL (`…courierservice.shipmentlookup-<version>/…`) via its own
+FDC app index, and that index refreshes ONLY on a manual content-provider sync in
+Channel Manager. The "Ecommerce" content provider had synced once at creation (Status
+**"Created"**, never "Updated") while **v0.0.2** was active — so every browser, even
+**fresh incognito**, was served v0.0.2's `fetch("/dashboard")` → 404 → red strip
+"Could not load shipment counts". applicationVersion bumps + `cf deploy`s could not fix
+it because the stale layer sits ABOVE the HTML5 repo. Documented SAP problem class:
+**KBA 3509334** (verbatim: users still get the old HTML5 app after a new version is deployed).
+
+**Evidence chain:** (1) F12 in fresh incognito → failing request is `GET /dashboard` 404,
+a call that exists ONLY in the v0.0.2 controller (`f7c676a:13`); v0.0.3 (PR #46) replaced
+it with `bindList("/Shipments")`. So the browser ran old CODE despite the repo holding
+0.0.3 ⇒ server-side staleness, not browser cache. (2) Independent deep analysis downloaded
+the actually-served bytes via the RT metadata API: the repo holds ONLY shipmentlookup
+**0.0.3** (isDefault=true, deployId c9a7077f, deployed 04:36:27Z), its served controller +
+Component-preload contain `bindList("/Shipments")` and zero `fetch`, byte-identical
+(sha256) to a clean-room rebuild from HEAD; 0.0.2/0.0.1 return 503 (gone). A packaging
+failure (the PR #40 precedent) is refuted at byte level — the v0.0.3 fixes were correct
+all along, they just never reached the browser. (3) **Fix:** Teru clicked 🔄 (Update
+content) on the Ecommerce provider row in Channel Manager → error strip vanished
+immediately; dashboard loads.
+
+**Success state on the empty DB** = clean "No data" table with **NO** error strip (same
+pass shape as Lookup's "No results found"); rows appear only once real bookings exist (1.6b).
+
+**⚠ NEW DEPLOY CHECKLIST — every UI change is now THREE legs, all required:**
+1. bump `sap.app/applicationVersion` in `app/shipment-lookup/webapp/manifest.json`
+2. `cf deploy`
+3. **re-sync the "Ecommerce" content provider** — Work Zone → Channel Manager → 🔄 (Update content) on that row; wait for Status "Updated"
+
+then verify in a **fresh incognito** window with F12 open (Network path shows `-<newversion>/`,
+no `/dashboard` 404, no error strip). **Skipping leg 3 = debugging ghosts.** Check Active
+Version without the cockpit via `GET https://html5-apps-repo-rt.cfapps.ap10.hana.ondemand.com/applications/metadata/`
+(trailing slash) with the `courier-html5-rt-key` token.
+
+**Cockpit "Applications could not be retrieved (BC-CP-CF-HTML5)" error** = independent
+transient platform hiccup, NOT related — the underlying RT API returned all apps fine
+(incl. shipmentlookup 0.0.3) twice today. Just retry the page later; open an SAP ticket on
+BC-CP-CF-HTML5 only if it persists >24h. (One caveat: Channel Manager "Update content" uses
+the same HTML5-repo backend — if that backend is genuinely wobbling, a re-sync could fail
+too; wait 30–60 min and retry.)
+
+**Cockpit destination "Configuration issues"** (sap.cloud.service `customerdatagovernance`
+on `srv-api` + `customerdatagovernance_uaa`) = INTERNAL to the co-located SAP Data
+Governance app's OWN destination instance (GUID 6737aa3b, configured 2026-07-01, 16 days
+before our first deploy). Our subaccount `srv-api` carries NO sap.cloud.service and is a
+different object — verified via live Destination-API reads + full 82-commit repo history.
+Not ours to fix; DG runs normally. Standing hazard we DO own (generic destination name in a
+shared subaccount) → addressed by the `srv-api` → `courier-srv-api` rename (next PR).
+
+**Harmless console noise seen alongside** (do NOT "fix"): DraftRoot/DraftNode "Invalid
+relative path w/o context" ODataMetaModel warnings (FE evaluating draft annotations against
+a non-draft service); `IntelligentPrompt-filter/-explain/-fill` PostMessageManager errors
+(shell probing for unconfigured Joule/AI intents — appears in incognito, so NOT a browser
+extension); sap.ushell getRenderer/UsageAnalytics deprecations; launchpad
+fincentraluserdefaults 404s.
+
+**M2 stays CLOSED. 1.17a dashboard tile now fully working on a real user token.** Remaining
+in 1.17: dispatch + config tiles, still gated on 0.1 BrowserPrint / 1.15.
+
+---
+
 ## 1.17a — SURFACED (open bug): Courier Dashboard tile loads no data — unresolved after 3 fixes
 _2026-07-18, session 4 wrap. **READ THIS BEFORE TOUCHING THE DASHBOARD.**_
+_(⬆ RESOLVED in the entry above — kept for the diagnostic trail.)_
 
 State at session end (per Teru's live testing, PRs #44–#46 all merged+deployed):
 - **Shipment Lookup tile: fully working** on a real user (renders, filters, plant-
