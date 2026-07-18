@@ -135,10 +135,12 @@ resources:
           subaccount:
             existing_destinations_policy: update
             destinations:
-              # srv-api: what app/shipment-lookup/xs-app.json routes point at.
+              # courier-srv-api: what app/shipment-lookup/xs-app.json routes point at.
+              # Renamed from the generic default "srv-api" (2026-07-18) so a future
+              # MTA in this SHARED subaccount can never clobber it via policy:update.
               # Token-forwarding so the user's JWT reaches courier-srv — the
               # scope+plant checks (S3/S7) run server-side on the real token.
-              - Name: srv-api
+              - Name: courier-srv-api
                 Description: courier-srv API for the Fiori apps
                 URL: ~{srv-api/srv-url}
                 Type: HTTP
