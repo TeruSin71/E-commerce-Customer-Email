@@ -1,0 +1,105 @@
+[
+  {
+    "_version": "3.0",
+    "identification": {
+      "entityType": "catalog",
+      "id": "courier_catalog",
+      "title": "Courier Shipments"
+    },
+    "payload": {
+      "viz": [
+        { "appId": "shipmentlookup", "vizId": "CourierShipment-lookup" },
+        { "appId": "shipmentlookup", "vizId": "CourierShipment-monitor" }
+      ]
+    }
+  },
+  {
+    "_version": "3.0",
+    "identification": {
+      "entityType": "group",
+      "id": "courier_group",
+      "title": "Courier Shipments"
+    },
+    "payload": {
+      "viz": [
+        { "id": "courier_tile_lookup", "appId": "shipmentlookup", "vizId": "CourierShipment-lookup" },
+        { "id": "courier_tile_monitor", "appId": "shipmentlookup", "vizId": "CourierShipment-monitor" }
+      ]
+    }
+  },
+  {
+    "_version": "3.1",
+    "identification": {
+      "entityType": "space",
+      "id": "courier_space",
+      "title": "Courier"
+    },
+    "payload": {
+      "contentNodes": [
+        { "type": "page", "id": "courier_page" }
+      ]
+    }
+  },
+  {
+    "_version": "3.1",
+    "identification": {
+      "entityType": "page",
+      "id": "courier_page",
+      "title": "Shipments"
+    },
+    "payload": {
+      "sections": [
+        {
+          "id": "courier_section_shipments",
+          "title": "Shipment Apps",
+          "viz": [
+            { "appId": "shipmentlookup", "vizId": "CourierShipment-lookup" },
+            { "appId": "shipmentlookup", "vizId": "CourierShipment-monitor", "displayFormatHint": "standardWide" }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "_version": "3.0",
+    "identification": {
+      "entityType": "role",
+      "id": "courier_dispatcher",
+      "title": "Courier Dispatcher"
+    },
+    "payload": {
+      "apps": [ { "id": "shipmentlookup" } ],
+      "catalogs": [ { "id": "courier_catalog" } ],
+      "groups": [ { "id": "courier_group" } ],
+      "spaces": [ { "id": "courier_space" } ]
+    }
+  },
+  {
+    "_version": "3.0",
+    "identification": {
+      "entityType": "role",
+      "id": "courier_supervisor",
+      "title": "Courier Supervisor"
+    },
+    "payload": {
+      "apps": [ { "id": "shipmentlookup" } ],
+      "catalogs": [ { "id": "courier_catalog" } ],
+      "groups": [ { "id": "courier_group" } ],
+      "spaces": [ { "id": "courier_space" } ]
+    }
+  },
+  {
+    "_version": "3.0",
+    "identification": {
+      "entityType": "role",
+      "id": "courier_support",
+      "title": "Courier Support"
+    },
+    "payload": {
+      "apps": [ { "id": "shipmentlookup" } ],
+      "catalogs": [ { "id": "courier_catalog" } ],
+      "groups": [ { "id": "courier_group" } ],
+      "spaces": [ { "id": "courier_space" } ]
+    }
+  }
+]
