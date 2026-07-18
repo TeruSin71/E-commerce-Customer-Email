@@ -48,6 +48,10 @@
       }
     }
   },
+  "sap.cloud": {
+    "public": true,
+    "service": "courier.service"
+  },
   "sap.ui": {
     "technology": "UI5",
     "icons": {

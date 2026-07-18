@@ -11,6 +11,11 @@ build-parameters:
       commands:
         - npm ci
         - npx cds build --production
+        # Work Zone CDM content rides in the same html5-repo upload as the app zip.
+        # Deployed name MUST be cdm.json — the html5-apps-repo runtime serves it at
+        # /applications/cdm/courier.service (sap.cloud.service in the app manifest).
+        - mkdir -p gen/app
+        - cp app/workzone/CommonDataModel.json gen/app/cdm.json
 modules:
   - name: E-commerce_Customer_Courier_Email-srv
     type: nodejs
@@ -50,12 +55,9 @@ modules:
           target-path: app/
     requires:
       - name: E-commerce_Customer_Courier_Email-auth
-      - name: srv-api
       - name: E-commerce_Customer_Courier_Email-html5-repo-host
         parameters:
           content-target: true
-          config:
-            HTML5Runtime_enabled: true
 
   - name: Ecommerce_Customer_Courier_Emailshipmentlookup
     type: html5
@@ -123,3 +125,12 @@ resources:
     parameters:
       service: html5-apps-repo
       service-plan: app-host
+
+  # app-runtime instance whose service key authenticates courier-cdm-dt against the
+  # HTML5 repo. Short explicit service-name: CF caps instance names at 50 chars.
+  - name: E-commerce_Customer_Courier_Email-html5-repo-runtime
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-runtime
+      service-name: courier-html5-rt
