@@ -11,7 +11,43 @@
 
 ---
 
-## 1.17a — COMPLETE (both tiles LIVE) + M2 CLOSED: S7/S3 evidenced on a real user token in Work Zone
+## 1.17a — SURFACED (open bug): Courier Dashboard tile loads no data — unresolved after 3 fixes
+_2026-07-18, session 4 wrap. **READ THIS BEFORE TOUCHING THE DASHBOARD.**_
+
+State at session end (per Teru's live testing, PRs #44–#46 all merged+deployed):
+- **Shipment Lookup tile: fully working** on a real user (renders, filters, plant-
+  scoped, empty-DB pass). M2 stays CLOSED — this bug does not touch the spine.
+- **Dashboard tile: routing FIXED, data load STILL FAILING.** Journey:
+  (1) v1 `window.location.hash` append — REVERTED silently by the Work Zone shell
+      (the sap-no-location-usage lint rule that warned about exactly this was
+      right; suppressed it, learned the lesson).
+  (2) v2 `HashChanger.replaceHash` + version bump 0.0.2 — routing WORKS (verified
+      in incognito: own page, title, counts table). Discovered live: raw
+      `fetch("/dashboard")` dies at the launchpad root — the managed approuter
+      routes ONLY manifest-declared dataSource requests (1.16 review predicted
+      this; xs-app.json routes do NOT rescue host-absolute fetches).
+  (3) v0.0.3 — dashboard rewritten onto the app's own OData V4 model
+      (`bindList('/Shipments', {$select: werks,status})` + client-side groupby,
+      Reprint REST paths made shell-aware via `sap.ui.require.toUrl`). Deployed,
+      bundle-verified. **Teru reports STILL not solved.**
+- **Unknown:** the actual failing request/error. All three fixes were built
+  without browser evidence. Classification (c)-ish: environment behavior only
+  observable client-side.
+- **NEXT SESSION, FIRST MOVE — get evidence before more fixes:** Teru opens the
+  dashboard tile in a FRESH incognito window (v0.0.3 must show in cockpit HTML5
+  Applications: Active Version 0.0.3), then F12 → Network tab → reload → capture
+  (a) which request fails (URL + status) and (b) Console errors. Suspects, in
+  order: stale 0.0.2 bundle still served to their session; FPM PageController /
+  getAppComponent().getModel() undefined on the custom page (would hit the catch
+  → error strip); OData $batch from the dashboard page failing differently than
+  the FE list. Do NOT ship fix #4 blind.
+- Also unresolved from testing: normal-Chrome profile clings to cached old
+  bundles well past hard refresh — advise Empty Cache & Hard Reload or new
+  profile when verifying deploys; incognito is the reliable check.
+
+---
+
+## 1.17a — COMPLETE (both tiles LIVE, lookup verified; dashboard caveat above) + M2 CLOSED: S7/S3 evidenced on a real user token in Work Zone
 _2026-07-18, session 3/4 — the click-through_
 
 **End state, verified by Teru in the browser:** the E-commerce Order Tracking
