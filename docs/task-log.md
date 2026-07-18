@@ -11,6 +11,38 @@
 
 ---
 
+## 1.17a — COMPLETE (both tiles LIVE) + M2 CLOSED: S7/S3 evidenced on a real user token in Work Zone
+_2026-07-18, session 3/4 — the click-through_
+
+**End state, verified by Teru in the browser:** the E-commerce Order Tracking
+site shows the Courier Shipments group with BOTH tiles; Shipment Lookup renders
+the full FE List Report (all annotation-driven filters + columns) and returns
+"No results found" on live HANA — real CIS token validated (S7), view scope
+passed, werks=1000 plant filter applied (S3), OData V4 against the deployed
+DB. Empty-because-no-bookings is the correct pass state. Courier Dashboard
+tile present. **M2 (security spine on real tokens) is CLOSED; 1.16's
+re-verify tag cleared for the UI leg.**
+How the last mile landed (for future regions): cockpit Edit was unavailable /
+import nonexistent — resolved via **btp CLI under Teru's SSO** (installed at
+`~/.local/bin/btp`, login `btp login --sso manual`):
+- `btp create security/role Courier_Dispatcher_NZ --of-app <xsappname!t89472>
+  --of-role-template CourierDispatcher --attributes werks.json` (static
+  ["1000"] — the CLI is the ONLY self-service path that carries attributes)
+- `btp add security/role ... --to-role-collection Courier_Dispatcher_NZ`
+- `btp assign security/role-collection <rc> --to-user <mail> --of-idp
+  sap.custom` ×4 (both collections × Teru + Benson; sap.custom = the CIS
+  origin — NEVER sap.default, confirmed via collection export)
+- read-back: `btp get security/user <mail> --of-idp sap.custom`
+An xsuaa `apiaccess` instance (courier-xsuaa-api) was also created: its
+client token can manage role COLLECTIONS but NOT roles/users (403s) — btp CLI
+under a user is the working automation for those. **Phase 3 note: the ~16
+remaining regional collections are now a scripted loop, not cockpit work.**
+Still open in 1.17: dispatch + config tiles (gated on 0.1 BrowserPrint / 1.15).
+Lookup stays empty until real bookings exist — /book on the DEPLOYED app needs
+the real NZ Post provider (1.6b; MOCK is dev/test-only by design, S1 guard).
+
+---
+
 ## 1.17a — DONE (agent half): Work Zone content as code — CDM served live from the HTML5 repo
 _2026-07-18, session 3 (PRs #39–#41 + this one; split blessed by Teru: lookup+dashboard
 tiles now, dispatch tile stays gated on 0.1)_
