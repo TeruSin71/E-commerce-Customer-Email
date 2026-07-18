@@ -71,6 +71,33 @@ modules:
       supported-platforms:
         []
 
+  # Work Zone content-provider DESIGN-TIME destination (courier-cdm-dt): lets the
+  # Work Zone Channel Manager read the CDM from the HTML5 repo, authenticated via a
+  # service key on the courier-html5-rt app-runtime instance. (The RUNTIME
+  # destination courier-cdm-rt needs the subaccount SUBDOMAIN — a cockpit value —
+  # created there or on a later deploy; see docs/task-log.)
+  - name: E-commerce_Customer_Courier_Email-workzone-dest-content
+    type: com.sap.application.content
+    build-parameters:
+      no-source: true
+    requires:
+      - name: E-commerce_Customer_Courier_Email-destination
+        parameters:
+          content-target: true
+      - name: E-commerce_Customer_Courier_Email-html5-repo-runtime
+        parameters:
+          service-key:
+            name: courier-html5-rt-key
+    parameters:
+      content:
+        subaccount:
+          existing_destinations_policy: update
+          destinations:
+            - Name: courier-cdm-dt
+              ServiceInstanceName: courier-html5-rt
+              ServiceKeyName: courier-html5-rt-key
+              URL: https://html5-apps-repo-rt.${default-domain}/applications/cdm/courier.service
+
 resources:
   - name: E-commerce_Customer_Courier_Email-auth
     type: org.cloudfoundry.managed-service
