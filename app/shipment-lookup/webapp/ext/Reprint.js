@@ -13,12 +13,27 @@ sap.ui.define(
 
     var pBundle = ResourceBundle.create({ bundleName: "shipmentlookup.i18n.i18n", async: true });
 
+    // Under the Work Zone managed approuter only APP-relative paths hit xs-app.json routes
+    // (a host-absolute fetch dies at the launchpad root — found live 2026-07-18). Resolve
+    // against the app's resource base when running in the shell; standalone/local keeps the
+    // absolute path (cds watch serves the REST routes at the host root).
+    function appPath(sPath) {
+      try {
+        if (sap.ushell) {
+          return sap.ui.require.toUrl("shipmentlookup") + sPath;
+        }
+      } catch {
+        /* standalone */
+      }
+      return sPath;
+    }
+
     // managed-approuter CSRF: GET with x-csrf-token: fetch, echo the token on the POST.
     // Token source = the OData service root: a csrfProtection:true route (xs-app.json) that
     // needs no entity scope — valid for every authenticated role, unlike /dashboard (view)
     // or /reprint (POST-only). Locally (cds watch, no approuter) the header is simply absent.
     function fetchCsrfToken() {
-      return fetch("/odata/v4/lookup/", { headers: { "x-csrf-token": "fetch" } })
+      return fetch(appPath("/odata/v4/lookup/"), { headers: { "x-csrf-token": "fetch" } })
         .then(function (oRes) {
           return oRes.headers.get("x-csrf-token") || "";
         })
@@ -41,7 +56,7 @@ sap.ui.define(
               if (sToken) {
                 oHeaders["x-csrf-token"] = sToken;
               }
-              return fetch("/reprint", {
+              return fetch(appPath("/reprint"), {
                 method: "POST",
                 headers: oHeaders,
                 body: JSON.stringify({ vbeln: oShipment.vbeln })
