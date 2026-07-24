@@ -12,7 +12,7 @@
   "devDependencies": {
     "@ui5/cli": "^4.0.33",
     "@sap/ux-ui5-tooling": "1",
-    "@sap-ux/eslint-plugin-fiori-tools": "^10.0.0",
+    "@sap-ux/eslint-plugin-fiori-tools": "^10.7.13",
     "eslint": "^10",
     "ui5-task-zipper": "^3"
   },
